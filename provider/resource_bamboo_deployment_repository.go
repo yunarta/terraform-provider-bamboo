@@ -7,6 +7,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/yunarta/golang-quality-of-life-pack/collections"
 	"github.com/yunarta/terraform-atlassian-api-client/bamboo"
@@ -15,8 +16,9 @@ import (
 )
 
 type DeploymentRepositoriesModel struct {
-	ID           types.String `tfsdk:"id"`
-	Repositories types.List   `tfsdk:"repositories"`
+	RetainOnDelete types.Bool   `tfsdk:"retain_on_delete"`
+	ID             types.String `tfsdk:"id"`
+	Repositories   types.List   `tfsdk:"repositories"`
 }
 
 var (
@@ -47,6 +49,11 @@ func (receiver *DeploymentRepositoriesResource) Metadata(ctx context.Context, re
 func (receiver *DeploymentRepositoriesResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
+			"retain_on_delete": schema.BoolAttribute{
+				Optional: true,
+				Computed: true,
+				Default:  booldefault.StaticBool(true),
+			},
 			"id": schema.StringAttribute{
 				Required: true,
 			},
@@ -98,8 +105,9 @@ func (receiver *DeploymentRepositoriesResource) Create(ctx context.Context, requ
 	}
 
 	diags = response.State.Set(ctx, &DeploymentRepositoriesModel{
-		ID:           types.StringValue(strconv.Itoa(deploymentId)),
-		Repositories: plan.Repositories,
+		RetainOnDelete: plan.RetainOnDelete,
+		ID:             types.StringValue(strconv.Itoa(deploymentId)),
+		Repositories:   plan.Repositories,
 	})
 	if util.TestDiagnostic(&response.Diagnostics, diags) {
 		return
@@ -140,8 +148,9 @@ func (receiver *DeploymentRepositoriesResource) Read(ctx context.Context, reques
 	}
 
 	diags = response.State.Set(ctx, &DeploymentRepositoriesModel{
-		ID:           types.StringValue(fmt.Sprintf("%v", deploymentId)),
-		Repositories: listValue,
+		RetainOnDelete: state.RetainOnDelete,
+		ID:             types.StringValue(fmt.Sprintf("%v", deploymentId)),
+		Repositories:   listValue,
 	})
 	if util.TestDiagnostic(&response.Diagnostics, diags) {
 		return
@@ -197,8 +206,9 @@ func (receiver *DeploymentRepositoriesResource) Update(ctx context.Context, requ
 	}
 
 	diags = response.State.Set(ctx, &DeploymentRepositoriesModel{
-		ID:           types.StringValue(strconv.Itoa(deploymentId)),
-		Repositories: plan.Repositories,
+		RetainOnDelete: plan.RetainOnDelete,
+		ID:             types.StringValue(strconv.Itoa(deploymentId)),
+		Repositories:   plan.Repositories,
 	})
 	if util.TestDiagnostic(&response.Diagnostics, diags) {
 		return
@@ -218,27 +228,31 @@ func (receiver *DeploymentRepositoriesResource) Delete(ctx context.Context, requ
 		return
 	}
 
-	deploymentId, err := strconv.Atoi(state.ID.ValueString())
-	if util.TestError(&response.Diagnostics, err, errorProvidedDeploymentIdMustBeNumber) {
-		return
-	}
-
-	diags = state.Repositories.ElementsAs(ctx, &existingRepositoryIDs, true)
-	if util.TestDiagnostic(&response.Diagnostics, diags) {
-		return
-	}
-
-	for _, repository := range existingRepositoryIDs {
-		repositoryId, err := strconv.Atoi(repository)
-		if util.TestError(&response.Diagnostics, err, errorProvidedRepositoryMustBeNumber) {
+	if !state.RetainOnDelete.ValueBool() {
+		var deploymentId int
+		deploymentId, err = strconv.Atoi(state.ID.ValueString())
+		if util.TestError(&response.Diagnostics, err, errorProvidedDeploymentIdMustBeNumber) {
 			return
 		}
 
-		err = receiver.client.DeploymentService().RemoveSpecRepositories(deploymentId, repositoryId)
-		if util.TestError(&response.Diagnostics, err, "Failed to remove deployment repositories") {
+		diags = state.Repositories.ElementsAs(ctx, &existingRepositoryIDs, true)
+		if util.TestDiagnostic(&response.Diagnostics, diags) {
 			return
 		}
+
+		for _, repository := range existingRepositoryIDs {
+			repositoryId, err := strconv.Atoi(repository)
+			if util.TestError(&response.Diagnostics, err, errorProvidedRepositoryMustBeNumber) {
+				return
+			}
+
+			err = receiver.client.DeploymentService().RemoveSpecRepositories(deploymentId, repositoryId)
+			if util.TestError(&response.Diagnostics, err, "Failed to remove deployment repositories") {
+				return
+			}
+		}
 	}
+
 	response.State.RemoveResource(ctx)
 }
 

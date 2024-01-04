@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
@@ -24,7 +25,7 @@ var (
 	_ resource.Resource                = &DeploymentResource{}
 	_ resource.ResourceWithConfigure   = &DeploymentResource{}
 	_ resource.ResourceWithImportState = &DeploymentResource{}
-	_ DeploymentPermissionResource     = &DeploymentResource{}
+	_ DeploymentPermissionsReceiver    = &DeploymentResource{}
 	_ ConfigurableReceiver             = &DeploymentResource{}
 )
 
@@ -53,6 +54,11 @@ func (receiver *DeploymentResource) Metadata(ctx context.Context, request resour
 func (receiver *DeploymentResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
+			"retain_on_delete": schema.BoolAttribute{
+				Optional: true,
+				Computed: true,
+				Default:  booldefault.StaticBool(true),
+			},
 			"id": schema.StringAttribute{
 				Computed: true,
 			},
@@ -158,7 +164,7 @@ func (receiver *DeploymentResource) Create(ctx context.Context, request resource
 		return
 	}
 
-	deploymentModel := NewDeploymentModel(deployment, plan, computation)
+	deploymentModel := NewDeploymentModel(plan, deployment, computation)
 
 	diags = response.State.Set(ctx, deploymentModel)
 	if util.TestDiagnostic(&response.Diagnostics, diags) {
@@ -220,7 +226,7 @@ func (receiver *DeploymentResource) Read(ctx context.Context, request resource.R
 		return
 	}
 
-	deploymentModel := NewDeploymentModel(deployment, state, computation)
+	deploymentModel := NewDeploymentModel(state, deployment, computation)
 	deploymentModel.Repositories = repositoryList
 
 	diags = response.State.Set(ctx, deploymentModel)
@@ -282,7 +288,7 @@ func (receiver *DeploymentResource) Update(ctx context.Context, request resource
 		return
 	}
 
-	deploymentModel := NewDeploymentModel(deployment, plan, computation)
+	deploymentModel := NewDeploymentModel(plan, deployment, computation)
 
 	diags = response.State.Set(ctx, deploymentModel)
 	if util.TestDiagnostic(&response.Diagnostics, diags) {
@@ -337,21 +343,23 @@ func (receiver *DeploymentResource) UpdateLinkedRepositories(ctx context.Context
 }
 
 func (receiver *DeploymentResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
-	var data DeploymentModel
+	var state DeploymentModel
 
-	diags := request.State.Get(ctx, &data)
+	diags := request.State.Get(ctx, &state)
 	if util.TestDiagnostic(&response.Diagnostics, diags) {
 		return
 	}
 
-	deploymentId, err := strconv.Atoi(data.ID.ValueString())
+	deploymentId, err := strconv.Atoi(state.ID.ValueString())
 	if util.TestError(&response.Diagnostics, err, errorProvidedDeploymentIdMustBeNumber) {
 		return
 	}
 
-	err = receiver.client.DeploymentService().Delete(deploymentId)
-	if util.TestError(&response.Diagnostics, err, "Failed to delete deployment") {
-		return
+	if !state.RetainOnDelete.ValueBool() {
+		err = receiver.client.DeploymentService().Delete(deploymentId)
+		if util.TestError(&response.Diagnostics, err, "Failed to delete deployment") {
+			return
+		}
 	}
 
 	response.State.RemoveResource(ctx)

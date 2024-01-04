@@ -6,7 +6,7 @@ import (
 	"github.com/yunarta/terraform-atlassian-api-client/bamboo"
 )
 
-type LinkedRepositoryPermissionResource interface {
+type LinkedRepositoryPermissionsReceiver interface {
 	getClient() *bamboo.Client
 }
 
@@ -15,7 +15,7 @@ type LinkedRepositoryPermissionInterface interface {
 	getLinkedRepositoryId(ctx context.Context) int
 }
 
-func CreateLinkedRepositoryAssignments(ctx context.Context, receiver LinkedRepositoryPermissionResource, plan LinkedRepositoryPermissionInterface) (*AssignmentResult, diag.Diagnostics) {
+func CreateLinkedRepositoryAssignments(ctx context.Context, receiver LinkedRepositoryPermissionsReceiver, plan LinkedRepositoryPermissionInterface) (*AssignmentResult, diag.Diagnostics) {
 	assignments, diags := plan.getAssignment(ctx)
 	if diags != nil {
 		return nil, diags
@@ -41,7 +41,7 @@ func CreateLinkedRepositoryAssignments(ctx context.Context, receiver LinkedRepos
 	)
 }
 
-func ComputeLinkedRepositoryAssignments(ctx context.Context, receiver LinkedRepositoryPermissionResource, state LinkedRepositoryPermissionInterface) (*AssignmentResult, diag.Diagnostics) {
+func ComputeLinkedRepositoryAssignments(ctx context.Context, receiver LinkedRepositoryPermissionsReceiver, state LinkedRepositoryPermissionInterface) (*AssignmentResult, diag.Diagnostics) {
 	assignments, diags := state.getAssignment(ctx)
 	if diags != nil {
 		return nil, diags
@@ -61,7 +61,7 @@ func ComputeLinkedRepositoryAssignments(ctx context.Context, receiver LinkedRepo
 	return ComputeAssignment(ctx, assignedPermissions, *assignmentOrder)
 }
 
-func UpdateLinkedRepositoryAssignments(ctx context.Context, receiver LinkedRepositoryPermissionResource,
+func UpdateLinkedRepositoryAssignments(ctx context.Context, receiver LinkedRepositoryPermissionsReceiver,
 	plan LinkedRepositoryPermissionInterface,
 	state LinkedRepositoryPermissionInterface,
 	forceUpdate bool) (*AssignmentResult, diag.Diagnostics) {
@@ -102,7 +102,7 @@ func UpdateLinkedRepositoryAssignments(ctx context.Context, receiver LinkedRepos
 	)
 }
 
-func DeleteLinkedRepositoryAssignments(ctx context.Context, receiver LinkedRepositoryPermissionResource, state LinkedRepositoryPermissionInterface) diag.Diagnostics {
+func DeleteLinkedRepositoryAssignments(ctx context.Context, receiver LinkedRepositoryPermissionsReceiver, state LinkedRepositoryPermissionInterface) diag.Diagnostics {
 	assignments, diags := state.getAssignment(ctx)
 	if diags != nil {
 		return diags

@@ -84,8 +84,9 @@ func (p *BambooProvider) DataSources(ctx context.Context) []func() datasource.Da
 
 func (p *BambooProvider) Resources(ctx context.Context) []func() resource.Resource {
 	return []func() resource.Resource{
-		NewProjectRepositoriesResource,
+		NewProjectResource,
 		NewProjectPermissionsResource,
+		NewProjectRepositoriesResource,
 		NewDeploymentResource,
 		NewDeploymentRepositoryResource,
 		NewLinkedRepositoryResource,

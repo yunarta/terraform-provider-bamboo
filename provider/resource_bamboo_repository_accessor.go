@@ -8,6 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/yunarta/golang-quality-of-life-pack/collections"
 	"github.com/yunarta/terraform-atlassian-api-client/bamboo"
@@ -16,8 +17,9 @@ import (
 )
 
 type LinkedRepositoryAccessorModel struct {
-	ID           types.String `tfsdk:"id"`
-	Repositories types.List   `tfsdk:"repositories"`
+	RetainOnDelete types.Bool   `tfsdk:"retain_on_delete"`
+	ID             types.String `tfsdk:"id"`
+	Repositories   types.List   `tfsdk:"repositories"`
 }
 
 var (
@@ -50,6 +52,11 @@ func (receiver *LinkedRepositoryAccessorResource) Schema(ctx context.Context, re
 		Description: `Repository accessor define relationship that allow other repositories to access this repository.
 					  It only add and remove repositories listed in its properties`,
 		Attributes: map[string]schema.Attribute{
+			"retain_on_delete": schema.BoolAttribute{
+				Optional: true,
+				Computed: true,
+				Default:  booldefault.StaticBool(true),
+			},
 			"id": schema.StringAttribute{
 				Required: true,
 			},
@@ -122,8 +129,9 @@ func (receiver *LinkedRepositoryAccessorResource) Create(ctx context.Context, re
 	}
 
 	diags = response.State.Set(ctx, &LinkedRepositoryAccessorModel{
-		ID:           types.StringValue(strconv.Itoa(repositoryId)),
-		Repositories: plan.Repositories,
+		RetainOnDelete: plan.RetainOnDelete,
+		ID:             types.StringValue(strconv.Itoa(repositoryId)),
+		Repositories:   plan.Repositories,
 	})
 
 	response.Diagnostics.Append(diags...)
@@ -167,8 +175,9 @@ func (receiver *LinkedRepositoryAccessorResource) Read(ctx context.Context, requ
 	}
 
 	diags = response.State.Set(ctx, &LinkedRepositoryAccessorModel{
-		ID:           types.StringValue(fmt.Sprintf("%v", repositoryId)),
-		Repositories: types.ListValueMust(types.StringType, repositoryIds),
+		RetainOnDelete: state.RetainOnDelete,
+		ID:             types.StringValue(fmt.Sprintf("%v", repositoryId)),
+		Repositories:   types.ListValueMust(types.StringType, repositoryIds),
 	})
 	if util.TestDiagnostic(&response.Diagnostics, diags) {
 		return
@@ -241,8 +250,9 @@ func (receiver *LinkedRepositoryAccessorResource) Update(ctx context.Context, re
 	}
 
 	diags = response.State.Set(ctx, &LinkedRepositoryAccessorModel{
-		ID:           types.StringValue(strconv.Itoa(repositoryId)),
-		Repositories: plan.Repositories,
+		RetainOnDelete: plan.RetainOnDelete,
+		ID:             types.StringValue(strconv.Itoa(repositoryId)),
+		Repositories:   plan.Repositories,
 	})
 
 	if util.TestDiagnostic(&response.Diagnostics, diags) {
@@ -263,33 +273,35 @@ func (receiver *LinkedRepositoryAccessorResource) Delete(ctx context.Context, re
 		return
 	}
 
-	repositoryId, err = strconv.Atoi(state.ID.ValueString())
-	if err != nil {
-		response.Diagnostics.AddError(errorProvidedRepositoryMustBeNumber, err.Error())
-		return
-	}
+	if !state.RetainOnDelete.ValueBool() {
+		repositoryId, err = strconv.Atoi(state.ID.ValueString())
+		if err != nil {
+			response.Diagnostics.AddError(errorProvidedRepositoryMustBeNumber, err.Error())
+			return
+		}
 
-	var repositories []bamboo.Repository
-	var existingRepositories = make([]string, 0)
+		var repositories []bamboo.Repository
+		var existingRepositories = make([]string, 0)
 
-	repositories, err = receiver.client.RepositoryService().ReadAccessor(repositoryId)
-	if err != nil {
-		response.Diagnostics.AddError(errorFailedToReadRepositoryAccessor, err.Error())
-		return
-	}
+		repositories, err = receiver.client.RepositoryService().ReadAccessor(repositoryId)
+		if err != nil {
+			response.Diagnostics.AddError(errorFailedToReadRepositoryAccessor, err.Error())
+			return
+		}
 
-	for _, repository := range repositories {
-		existingRepositories = append(existingRepositories, strconv.Itoa(repository.ID))
-	}
+		for _, repository := range repositories {
+			existingRepositories = append(existingRepositories, strconv.Itoa(repository.ID))
+		}
 
-	for _, repository := range inStateRepositories {
+		for _, repository := range inStateRepositories {
 
-		if collections.Contains(existingRepositories, repository) {
-			accessorId, _ := strconv.Atoi(repository)
-			err = receiver.client.RepositoryService().RemoveAccessor(repositoryId, accessorId)
-			if err != nil {
-				response.Diagnostics.AddError(errorFailedToRemoveRepositoryAccessor, err.Error())
-				return
+			if collections.Contains(existingRepositories, repository) {
+				accessorId, _ := strconv.Atoi(repository)
+				err = receiver.client.RepositoryService().RemoveAccessor(repositoryId, accessorId)
+				if err != nil {
+					response.Diagnostics.AddError(errorFailedToRemoveRepositoryAccessor, err.Error())
+					return
+				}
 			}
 		}
 	}

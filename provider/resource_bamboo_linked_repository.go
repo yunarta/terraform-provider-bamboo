@@ -16,11 +16,11 @@ import (
 )
 
 var (
-	_ resource.Resource                  = &LinkedRepositoryResource{}
-	_ resource.ResourceWithConfigure     = &LinkedRepositoryResource{}
-	_ resource.ResourceWithImportState   = &LinkedRepositoryResource{}
-	_ LinkedRepositoryPermissionResource = &LinkedRepositoryResource{}
-	_ ConfigurableReceiver               = &LinkedRepositoryResource{}
+	_ resource.Resource                   = &LinkedRepositoryResource{}
+	_ resource.ResourceWithConfigure      = &LinkedRepositoryResource{}
+	_ resource.ResourceWithImportState    = &LinkedRepositoryResource{}
+	_ LinkedRepositoryPermissionsReceiver = &LinkedRepositoryResource{}
+	_ ConfigurableReceiver                = &LinkedRepositoryResource{}
 )
 
 func NewLinkedRepositoryResource() resource.Resource {
@@ -85,7 +85,6 @@ func (receiver *LinkedRepositoryResource) Schema(ctx context.Context, request re
 }
 
 func nameCheck(ctx context.Context, request planmodifier.StringRequest, response *stringplanmodifier.RequiresReplaceIfFuncResponse) {
-
 	var plan, state LinkedRepositoryModel
 
 	diags := request.Plan.Get(ctx, &plan)
@@ -184,7 +183,7 @@ func (receiver *LinkedRepositoryResource) Create(ctx context.Context, request re
 		return
 	}
 
-	diags = response.State.Set(ctx, NewLinkedRepositoryModel(repository.ID, plan, computation))
+	diags = response.State.Set(ctx, NewLinkedRepositoryModel(plan, repository.ID, computation))
 	if util.TestDiagnostic(&response.Diagnostics, diags) {
 		return
 	}
@@ -217,7 +216,7 @@ func (receiver *LinkedRepositoryResource) Read(ctx context.Context, request reso
 		return
 	}
 
-	repositoryModel := NewLinkedRepositoryModel(repository.ID, state, computation)
+	repositoryModel := NewLinkedRepositoryModel(state, repository.ID, computation)
 
 	diags = response.State.Set(ctx, repositoryModel)
 	if util.TestDiagnostic(&response.Diagnostics, diags) {
@@ -257,7 +256,7 @@ func (receiver *LinkedRepositoryResource) Update(ctx context.Context, request re
 		return
 	}
 
-	repositoryModel := NewLinkedRepositoryModel(repository.ID, plan, computation)
+	repositoryModel := NewLinkedRepositoryModel(plan, repository.ID, computation)
 
 	diags = response.State.Set(ctx, repositoryModel)
 	if util.TestDiagnostic(&response.Diagnostics, diags) {

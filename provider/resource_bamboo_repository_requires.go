@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/yunarta/golang-quality-of-life-pack/collections"
@@ -19,8 +20,9 @@ import (
 )
 
 type LinkedRepositoryDependencyModel struct {
-	ID           types.String `tfsdk:"id"`
-	Repositories types.List   `tfsdk:"requires"`
+	RetainOnDelete types.Bool   `tfsdk:"retain_on_delete"`
+	ID             types.String `tfsdk:"id"`
+	Repositories   types.List   `tfsdk:"requires"`
 }
 
 var (
@@ -51,6 +53,11 @@ func (receiver *LinkedRepositoryDependencyResource) Schema(ctx context.Context, 
 	response.Schema = schema.Schema{
 		Description: "Repository requires define relationship where this repository requires access to list of repositories",
 		Attributes: map[string]schema.Attribute{
+			"retain_on_delete": schema.BoolAttribute{
+				Optional: true,
+				Computed: true,
+				Default:  booldefault.StaticBool(true),
+			},
 			"id": schema.StringAttribute{
 				Required: true,
 			},
@@ -125,8 +132,9 @@ func (receiver *LinkedRepositoryDependencyResource) Create(ctx context.Context, 
 	}
 
 	diags = response.State.Set(ctx, &LinkedRepositoryDependencyModel{
-		ID:           types.StringValue(strconv.Itoa(repositoryId)),
-		Repositories: plan.Repositories,
+		RetainOnDelete: plan.RetainOnDelete,
+		ID:             types.StringValue(strconv.Itoa(repositoryId)),
+		Repositories:   plan.Repositories,
 	})
 	if util.TestDiagnostic(&response.Diagnostics, diags) {
 		return
@@ -134,19 +142,19 @@ func (receiver *LinkedRepositoryDependencyResource) Create(ctx context.Context, 
 }
 
 func (receiver *LinkedRepositoryDependencyResource) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
-	var data LinkedRepositoryDependencyModel
+	var state LinkedRepositoryDependencyModel
 	var err error
 	var dependencies = make([]string, 0)
 	var newDependencies []attr.Value
 
 	if util.TestDiagnostics(&response.Diagnostics,
-		request.State.Get(ctx, &data),
-		data.Repositories.ElementsAs(ctx, &dependencies, true),
+		request.State.Get(ctx, &state),
+		state.Repositories.ElementsAs(ctx, &dependencies, true),
 	) {
 		return
 	}
 
-	repositoryId, err := strconv.Atoi(data.ID.ValueString())
+	repositoryId, err := strconv.Atoi(state.ID.ValueString())
 	if util.TestError(&response.Diagnostics, err, errorProvidedDeploymentIdMustBeNumber) {
 		return
 	}
@@ -177,8 +185,9 @@ func (receiver *LinkedRepositoryDependencyResource) Read(ctx context.Context, re
 	}
 
 	diags := response.State.Set(ctx, &LinkedRepositoryDependencyModel{
-		ID:           types.StringValue(fmt.Sprintf("%v", repositoryId)),
-		Repositories: types.ListValueMust(types.StringType, newDependencies),
+		RetainOnDelete: state.RetainOnDelete,
+		ID:             types.StringValue(fmt.Sprintf("%v", repositoryId)),
+		Repositories:   types.ListValueMust(types.StringType, newDependencies),
 	})
 	if util.TestDiagnostic(&response.Diagnostics, diags) {
 		return
@@ -233,8 +242,9 @@ func (receiver *LinkedRepositoryDependencyResource) Update(ctx context.Context, 
 	}
 
 	diags = response.State.Set(ctx, &LinkedRepositoryDependencyModel{
-		ID:           types.StringValue(strconv.Itoa(repositoryId)),
-		Repositories: plan.Repositories,
+		RetainOnDelete: plan.RetainOnDelete,
+		ID:             types.StringValue(strconv.Itoa(repositoryId)),
+		Repositories:   plan.Repositories,
 	})
 	if util.TestDiagnostic(&response.Diagnostics, diags) {
 		return
@@ -254,17 +264,19 @@ func (receiver *LinkedRepositoryDependencyResource) Delete(ctx context.Context, 
 		return
 	}
 
-	var repositoryId int
-	repositoryId, err = strconv.Atoi(state.ID.ValueString())
-	if util.TestError(&response.Diagnostics, err, errorProvidedRepositoryMustBeNumber) {
-		return
-	}
-
-	for _, repository := range existingDependencies {
-		dependency, _ := strconv.Atoi(repository)
-		err = receiver.client.RepositoryService().RemoveAccessor(dependency, repositoryId)
-		if util.TestError(&response.Diagnostics, err, errorFailedToRemoveRepository) {
+	if !state.RetainOnDelete.ValueBool() {
+		var repositoryId int
+		repositoryId, err = strconv.Atoi(state.ID.ValueString())
+		if util.TestError(&response.Diagnostics, err, errorProvidedRepositoryMustBeNumber) {
 			return
+		}
+
+		for _, repository := range existingDependencies {
+			dependency, _ := strconv.Atoi(repository)
+			err = receiver.client.RepositoryService().RemoveAccessor(dependency, repositoryId)
+			if util.TestError(&response.Diagnostics, err, errorFailedToRemoveRepository) {
+				return
+			}
 		}
 	}
 

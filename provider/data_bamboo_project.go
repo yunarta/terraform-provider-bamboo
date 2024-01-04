@@ -12,8 +12,8 @@ import (
 
 type ProjectData struct {
 	Key    types.String `tfsdk:"key"`
-	Users  types.List   `tfsdk:"users"`
-	Groups types.List   `tfsdk:"groups"`
+	Users  types.Map    `tfsdk:"users"`
+	Groups types.Map    `tfsdk:"groups"`
 }
 
 var (
@@ -50,13 +50,17 @@ func (receiver *ProjectDataSource) Schema(ctx context.Context, request datasourc
 			"key": schema.StringAttribute{
 				Required: true,
 			},
-			"users": schema.ListAttribute{
-				Computed:    true,
-				ElementType: types.StringType,
+			"users": schema.MapAttribute{
+				Computed: true,
+				ElementType: types.ListType{
+					ElemType: types.StringType,
+				},
 			},
-			"groups": schema.ListAttribute{
-				Computed:    true,
-				ElementType: types.StringType,
+			"groups": schema.MapAttribute{
+				Computed: true,
+				ElementType: types.ListType{
+					ElemType: types.StringType,
+				},
 			},
 		},
 	}
@@ -64,48 +68,30 @@ func (receiver *ProjectDataSource) Schema(ctx context.Context, request datasourc
 
 func (receiver *ProjectDataSource) Read(ctx context.Context, request datasource.ReadRequest, response *datasource.ReadResponse) {
 	var (
-		data  ProjectData
-		diags diag.Diagnostics
+		config ProjectData
+		diags  diag.Diagnostics
 	)
 
-	diags = request.Config.Get(ctx, &data)
+	diags = request.Config.Get(ctx, &config)
 	if util.TestDiagnostic(&response.Diagnostics, diags) {
 		return
 	}
 
-	permissions, err := receiver.client.ProjectService().ReadPermissions(data.Key.ValueString())
+	assignedPermissions, err := receiver.client.ProjectService().ReadPermissions(config.Key.ValueString())
 	if util.TestError(&response.Diagnostics, err, "Failed to read deployment repositories") {
 		return
 	}
 
-	var (
-		users  = make([]string, 0)
-		groups = make([]string, 0)
-	)
-	for _, user := range permissions.Users {
-		users = append(users, user.Name)
-	}
-
-	for _, group := range permissions.Groups {
-		groups = append(groups, group.Name)
-	}
-
-	userList, diags := types.ListValueFrom(ctx, types.StringType, users)
-	if util.TestDiagnostic(&response.Diagnostics, diags) {
-		return
-	}
-
-	groupList, diags := types.ListValueFrom(ctx, types.StringType, groups)
+	users, groups, diags := CreateAttestation(ctx, assignedPermissions, &response.Diagnostics)
 	if util.TestDiagnostic(&response.Diagnostics, diags) {
 		return
 	}
 
 	diags = response.State.Set(ctx, &ProjectData{
-		Key:    types.StringValue(data.Key.ValueString()),
-		Users:  userList,
-		Groups: groupList,
+		Key:    config.Key,
+		Users:  users,
+		Groups: groups,
 	})
-
 	if util.TestDiagnostic(&response.Diagnostics, diags) {
 		return
 	}

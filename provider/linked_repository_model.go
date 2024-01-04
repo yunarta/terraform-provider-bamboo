@@ -36,7 +36,7 @@ func (d LinkedRepositoryModel) getLinkedRepositoryId(ctx context.Context) int {
 	return deploymentId
 }
 
-func NewLinkedRepositoryModel(repositoryId int, plan LinkedRepositoryModel, assignmentResult *AssignmentResult) *LinkedRepositoryModel {
+func NewLinkedRepositoryModel(plan LinkedRepositoryModel, repositoryId int, assignmentResult *AssignmentResult) *LinkedRepositoryModel {
 	return &LinkedRepositoryModel{
 		ID:                types.StringValue(fmt.Sprintf("%v", repositoryId)),
 		Name:              plan.Name,

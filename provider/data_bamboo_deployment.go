@@ -12,8 +12,10 @@ import (
 )
 
 type DeploymentData struct {
-	Id   types.String `tfsdk:"id"`
-	Name types.String `tfsdk:"name"`
+	Id     types.String `tfsdk:"id"`
+	Name   types.String `tfsdk:"name"`
+	Users  types.Map    `tfsdk:"users"`
+	Groups types.Map    `tfsdk:"groups"`
 }
 
 var (
@@ -53,6 +55,18 @@ func (receiver *DeploymentDataSource) Schema(ctx context.Context, request dataso
 			"name": schema.StringAttribute{
 				Required: true,
 			},
+			"users": schema.MapAttribute{
+				Computed: true,
+				ElementType: types.ListType{
+					ElemType: types.StringType,
+				},
+			},
+			"groups": schema.MapAttribute{
+				Computed: true,
+				ElementType: types.ListType{
+					ElemType: types.StringType,
+				},
+			},
 		},
 	}
 }
@@ -78,9 +92,21 @@ func (receiver *DeploymentDataSource) Read(ctx context.Context, request datasour
 		return
 	}
 
+	assignedPermissions, err := receiver.client.DeploymentService().ReadPermissions(deployment.ID)
+	if util.TestError(&response.Diagnostics, err, "Failed to read deployment permissions") {
+		return
+	}
+
+	users, groups, diags := CreateAttestation(ctx, assignedPermissions, &response.Diagnostics)
+	if util.TestDiagnostic(&response.Diagnostics, diags) {
+		return
+	}
+
 	diags = response.State.Set(ctx, &DeploymentData{
-		Id:   types.StringValue(strconv.Itoa(deployment.ID)),
-		Name: types.StringValue(deployment.Name),
+		Id:     types.StringValue(strconv.Itoa(deployment.ID)),
+		Name:   types.StringValue(deployment.Name),
+		Users:  users,
+		Groups: groups,
 	})
 	if util.TestDiagnostic(&response.Diagnostics, diags) {
 		return

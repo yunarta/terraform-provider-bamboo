@@ -6,7 +6,7 @@ import (
 	"github.com/yunarta/terraform-atlassian-api-client/bamboo"
 )
 
-type DeploymentPermissionResource interface {
+type DeploymentPermissionsReceiver interface {
 	getClient() *bamboo.Client
 }
 
@@ -15,7 +15,7 @@ type DeploymentPermissionInterface interface {
 	getDeploymentId(ctx context.Context) int
 }
 
-func CreateDeploymentAssignments(ctx context.Context, receiver DeploymentPermissionResource, plan DeploymentPermissionInterface) (*AssignmentResult, diag.Diagnostics) {
+func CreateDeploymentAssignments(ctx context.Context, receiver DeploymentPermissionsReceiver, plan DeploymentPermissionInterface) (*AssignmentResult, diag.Diagnostics) {
 	assignments, diags := plan.getAssignment(ctx)
 	if diags != nil {
 		return nil, diags
@@ -42,7 +42,7 @@ func CreateDeploymentAssignments(ctx context.Context, receiver DeploymentPermiss
 	)
 }
 
-func ComputeDeploymentAssignments(ctx context.Context, receiver DeploymentPermissionResource, state DeploymentPermissionInterface) (*AssignmentResult, diag.Diagnostics) {
+func ComputeDeploymentAssignments(ctx context.Context, receiver DeploymentPermissionsReceiver, state DeploymentPermissionInterface) (*AssignmentResult, diag.Diagnostics) {
 	assignments, diags := state.getAssignment(ctx)
 	if diags != nil {
 		return nil, diags
@@ -62,7 +62,7 @@ func ComputeDeploymentAssignments(ctx context.Context, receiver DeploymentPermis
 	return ComputeAssignment(ctx, assignedPermissions, *assignmentOrder)
 }
 
-func UpdateDeploymentAssignments(ctx context.Context, receiver DeploymentPermissionResource,
+func UpdateDeploymentAssignments(ctx context.Context, receiver DeploymentPermissionsReceiver,
 	plan DeploymentPermissionInterface,
 	state DeploymentPermissionInterface,
 	forceUpdate bool) (*AssignmentResult, diag.Diagnostics) {
@@ -103,7 +103,7 @@ func UpdateDeploymentAssignments(ctx context.Context, receiver DeploymentPermiss
 	)
 }
 
-func DeleteDeploymentAssignments(ctx context.Context, receiver DeploymentPermissionResource, state DeploymentPermissionInterface) diag.Diagnostics {
+func DeleteDeploymentAssignments(ctx context.Context, receiver DeploymentPermissionsReceiver, state DeploymentPermissionInterface) diag.Diagnostics {
 	assignments, diags := state.getAssignment(ctx)
 	if diags != nil {
 		return diags

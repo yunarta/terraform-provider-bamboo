@@ -6,6 +6,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -16,8 +17,9 @@ import (
 )
 
 type ProjectRepositoriesModel struct {
-	Key          types.String `tfsdk:"key"`
-	Repositories types.List   `tfsdk:"repositories"`
+	RetainOnDelete types.Bool   `tfsdk:"retain_on_delete"`
+	Key            types.String `tfsdk:"key"`
+	Repositories   types.List   `tfsdk:"repositories"`
 }
 
 var (
@@ -48,6 +50,11 @@ func (receiver *ProjectRepositoriesResource) Metadata(ctx context.Context, reque
 func (receiver *ProjectRepositoriesResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
+			"retain_on_delete": schema.BoolAttribute{
+				Optional: true,
+				Computed: true,
+				Default:  booldefault.StaticBool(true),
+			},
 			"key": schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
@@ -96,8 +103,9 @@ func (receiver *ProjectRepositoriesResource) Create(ctx context.Context, request
 	}
 
 	diags = response.State.Set(ctx, &ProjectRepositoriesModel{
-		Key:          types.StringValue(plan.Key.ValueString()),
-		Repositories: plan.Repositories,
+		RetainOnDelete: plan.RetainOnDelete,
+		Key:            types.StringValue(plan.Key.ValueString()),
+		Repositories:   plan.Repositories,
 	})
 	if util.TestDiagnostic(&response.Diagnostics, diags) {
 		return
@@ -145,8 +153,9 @@ func (receiver *ProjectRepositoriesResource) Read(ctx context.Context, request r
 	}
 
 	diags = response.State.Set(ctx, &ProjectRepositoriesModel{
-		Key:          types.StringValue(state.Key.ValueString()),
-		Repositories: listValue,
+		RetainOnDelete: state.RetainOnDelete,
+		Key:            types.StringValue(state.Key.ValueString()),
+		Repositories:   listValue,
 	})
 	if util.TestDiagnostic(&response.Diagnostics, diags) {
 		return
@@ -206,8 +215,9 @@ func (receiver *ProjectRepositoriesResource) Update(ctx context.Context, request
 	}
 
 	diags = response.State.Set(ctx, &ProjectRepositoriesModel{
-		Key:          types.StringValue(plan.Key.ValueString()),
-		Repositories: plan.Repositories,
+		RetainOnDelete: plan.RetainOnDelete,
+		Key:            types.StringValue(plan.Key.ValueString()),
+		Repositories:   plan.Repositories,
 	})
 	if util.TestDiagnostic(&response.Diagnostics, diags) {
 		return
@@ -226,22 +236,25 @@ func (receiver *ProjectRepositoriesResource) Delete(ctx context.Context, request
 		return
 	}
 
-	diags = state.Repositories.ElementsAs(ctx, &existingRepositoryIDs, true)
-	if util.TestDiagnostic(&response.Diagnostics, diags) {
-		return
-	}
-
-	for _, repository := range existingRepositoryIDs {
-		repositoryId, err := strconv.Atoi(repository)
-		if util.TestError(&response.Diagnostics, err, errorProvidedRepositoryMustBeNumber) {
+	if !state.RetainOnDelete.ValueBool() {
+		diags = state.Repositories.ElementsAs(ctx, &existingRepositoryIDs, true)
+		if util.TestDiagnostic(&response.Diagnostics, diags) {
 			return
 		}
 
-		err = receiver.client.ProjectService().RemoveSpecRepositories(state.Key.ValueString(), repositoryId)
-		if util.TestError(&response.Diagnostics, err, errorFailedToRemoveProjectRepositories) {
-			return
+		for _, repository := range existingRepositoryIDs {
+			repositoryId, err := strconv.Atoi(repository)
+			if util.TestError(&response.Diagnostics, err, errorProvidedRepositoryMustBeNumber) {
+				return
+			}
+
+			err = receiver.client.ProjectService().RemoveSpecRepositories(state.Key.ValueString(), repositoryId)
+			if util.TestError(&response.Diagnostics, err, errorFailedToRemoveProjectRepositories) {
+				return
+			}
 		}
 	}
+
 	response.State.RemoveResource(ctx)
 }
 

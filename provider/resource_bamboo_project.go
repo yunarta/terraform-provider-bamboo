@@ -14,36 +14,36 @@ import (
 )
 
 var (
-	_ resource.Resource                = &ProjectPermissionsResource{}
-	_ resource.ResourceWithConfigure   = &ProjectPermissionsResource{}
-	_ resource.ResourceWithImportState = &ProjectPermissionsResource{}
-	_ ProjectPermissionsReceiver       = &ProjectPermissionsResource{}
-	_ ConfigurableReceiver             = &ProjectPermissionsResource{}
+	_ resource.Resource                = &ProjectResource{}
+	_ resource.ResourceWithConfigure   = &ProjectResource{}
+	_ resource.ResourceWithImportState = &ProjectResource{}
+	_ ProjectPermissionsReceiver       = &ProjectResource{}
+	_ ConfigurableReceiver             = &ProjectResource{}
 )
 
-func NewProjectPermissionsResource() resource.Resource {
-	return &ProjectPermissionsResource{}
+func NewProjectResource() resource.Resource {
+	return &ProjectResource{}
 }
 
-type ProjectPermissionsResource struct {
+type ProjectResource struct {
 	config BambooProviderConfig
 	client *bamboo.Client
 }
 
-func (receiver *ProjectPermissionsResource) setConfig(config BambooProviderConfig, client *bamboo.Client) {
+func (receiver *ProjectResource) setConfig(config BambooProviderConfig, client *bamboo.Client) {
 	receiver.config = config
 	receiver.client = client
 }
 
-func (receiver *ProjectPermissionsResource) getClient() *bamboo.Client {
+func (receiver *ProjectResource) getClient() *bamboo.Client {
 	return receiver.client
 }
 
-func (receiver *ProjectPermissionsResource) Metadata(ctx context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = request.ProviderTypeName + "_project_permissions"
+func (receiver *ProjectResource) Metadata(ctx context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
+	response.TypeName = request.ProviderTypeName + "_project"
 }
 
-func (receiver *ProjectPermissionsResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
+func (receiver *ProjectResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"retain_on_delete": schema.BoolAttribute{
@@ -56,6 +56,12 @@ func (receiver *ProjectPermissionsResource) Schema(ctx context.Context, request 
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
+			},
+			"name": schema.StringAttribute{
+				Required: true,
+			},
+			"description": schema.StringAttribute{
+				Optional: true,
 			},
 			"assignment_version": schema.StringAttribute{
 				Optional: true,
@@ -78,19 +84,28 @@ func (receiver *ProjectPermissionsResource) Schema(ctx context.Context, request 
 	}
 }
 
-func (receiver *ProjectPermissionsResource) Configure(ctx context.Context, request resource.ConfigureRequest, response *resource.ConfigureResponse) {
+func (receiver *ProjectResource) Configure(ctx context.Context, request resource.ConfigureRequest, response *resource.ConfigureResponse) {
 	ConfigureResource(receiver, ctx, request, response)
 }
 
-func (receiver *ProjectPermissionsResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
+func (receiver *ProjectResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
 	var (
 		diags diag.Diagnostics
 
-		plan ProjectPermissionsModel
+		plan ProjectModel
 	)
 
 	diags = request.Plan.Get(ctx, &plan)
 	if util.TestDiagnostic(&response.Diagnostics, diags) {
+		return
+	}
+
+	project, err := receiver.client.ProjectService().Create(bamboo.CreateProject{
+		Key:         plan.Key.ValueString(),
+		Name:        plan.Name.ValueString(),
+		Description: plan.Description.ValueString(),
+	})
+	if util.TestError(&response.Diagnostics, err, "Failed to create project") {
 		return
 	}
 
@@ -99,7 +114,7 @@ func (receiver *ProjectPermissionsResource) Create(ctx context.Context, request 
 		return
 	}
 
-	repositoryModel := NewProjectPermissionsModel(plan, computation)
+	repositoryModel := NewProjectModel(plan, project, computation)
 
 	diags = response.State.Set(ctx, repositoryModel)
 	if util.TestDiagnostic(&response.Diagnostics, diags) {
@@ -107,15 +122,20 @@ func (receiver *ProjectPermissionsResource) Create(ctx context.Context, request 
 	}
 }
 
-func (receiver *ProjectPermissionsResource) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
+func (receiver *ProjectResource) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
 	var (
 		diags diag.Diagnostics
 
-		state ProjectPermissionsModel
+		state ProjectModel
 	)
 
 	diags = request.State.Get(ctx, &state)
 	if util.TestDiagnostic(&response.Diagnostics, diags) {
+		return
+	}
+
+	project, err := receiver.client.ProjectService().Read(state.Key.ValueString())
+	if util.TestError(&response.Diagnostics, err, "Failed to create project") {
 		return
 	}
 
@@ -124,7 +144,7 @@ func (receiver *ProjectPermissionsResource) Read(ctx context.Context, request re
 		return
 	}
 
-	repositoryModel := NewProjectPermissionsModel(state, computation)
+	repositoryModel := NewProjectModel(state, project, computation)
 
 	diags = response.State.Set(ctx, repositoryModel)
 	if util.TestDiagnostic(&response.Diagnostics, diags) {
@@ -132,11 +152,11 @@ func (receiver *ProjectPermissionsResource) Read(ctx context.Context, request re
 	}
 }
 
-func (receiver *ProjectPermissionsResource) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
+func (receiver *ProjectResource) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
 	var (
 		diags diag.Diagnostics
 
-		plan, state ProjectPermissionsModel
+		plan, state ProjectModel
 	)
 
 	diags = request.Plan.Get(ctx, &plan)
@@ -146,6 +166,15 @@ func (receiver *ProjectPermissionsResource) Update(ctx context.Context, request 
 
 	diags = request.State.Get(ctx, &state)
 	if util.TestDiagnostic(&response.Diagnostics, diags) {
+		return
+	}
+
+	project, err := receiver.client.ProjectService().Update(plan.Key.ValueString(), bamboo.UpdateProject{
+		Name:        plan.Name.ValueString(),
+		Description: plan.Description.ValueString(),
+	})
+
+	if util.TestError(&response.Diagnostics, err, "Failed to update project") {
 		return
 	}
 
@@ -155,7 +184,7 @@ func (receiver *ProjectPermissionsResource) Update(ctx context.Context, request 
 		return
 	}
 
-	repositoryModel := NewProjectPermissionsModel(plan, computation)
+	repositoryModel := NewProjectModel(plan, project, computation)
 
 	diags = response.State.Set(ctx, repositoryModel)
 	if util.TestDiagnostic(&response.Diagnostics, diags) {
@@ -163,10 +192,10 @@ func (receiver *ProjectPermissionsResource) Update(ctx context.Context, request 
 	}
 }
 
-func (receiver *ProjectPermissionsResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
+func (receiver *ProjectResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
 	var (
 		diags diag.Diagnostics
-		state ProjectPermissionsModel
+		state ProjectModel
 	)
 
 	diags = request.State.Get(ctx, &state)
@@ -175,8 +204,8 @@ func (receiver *ProjectPermissionsResource) Delete(ctx context.Context, request 
 	}
 
 	if !state.RetainOnDelete.ValueBool() {
-		diags = DeleteProjectAssignments(ctx, receiver, state)
-		if util.TestDiagnostic(&response.Diagnostics, diags) {
+		err := receiver.client.ProjectService().Delete(state.Key.ValueString())
+		if util.TestError(&response.Diagnostics, err, "Failed to delete project") {
 			return
 		}
 	}
@@ -184,6 +213,6 @@ func (receiver *ProjectPermissionsResource) Delete(ctx context.Context, request 
 	response.State.RemoveResource(ctx)
 }
 
-func (receiver *ProjectPermissionsResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
+func (receiver *ProjectResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
 	resource.ImportStatePassthroughID(ctx, path.Root("key"), request, response)
 }

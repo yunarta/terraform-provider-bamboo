@@ -11,6 +11,7 @@ import (
 )
 
 type DeploymentModel struct {
+	RetainOnDelete         types.Bool   `tfsdk:"retain_on_delete"`
 	ID                     types.String `tfsdk:"id"`
 	Name                   types.String `tfsdk:"name"`
 	PlanKey                types.String `tfsdk:"plan_key"`
@@ -38,8 +39,9 @@ func (d DeploymentModel) getDeploymentId(ctx context.Context) int {
 	return deploymentId
 }
 
-func NewDeploymentModel(deployment *bamboo.Deployment, plan DeploymentModel, assignmentResult *AssignmentResult) *DeploymentModel {
+func NewDeploymentModel(plan DeploymentModel, deployment *bamboo.Deployment, assignmentResult *AssignmentResult) *DeploymentModel {
 	return &DeploymentModel{
+		RetainOnDelete:         plan.RetainOnDelete,
 		ID:                     types.StringValue(fmt.Sprintf("%v", deployment.ID)),
 		Name:                   types.StringValue(deployment.Name),
 		PlanKey:                types.StringValue(deployment.PlanKey.Key),

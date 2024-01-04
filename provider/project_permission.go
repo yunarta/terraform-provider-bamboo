@@ -6,7 +6,7 @@ import (
 	"github.com/yunarta/terraform-atlassian-api-client/bamboo"
 )
 
-type ProjectPermissionResource interface {
+type ProjectPermissionsReceiver interface {
 	getClient() *bamboo.Client
 }
 
@@ -15,7 +15,7 @@ type ProjectPermissionInterface interface {
 	getProjectKey(ctx context.Context) string
 }
 
-func CreateProjectAssignments(ctx context.Context, receiver ProjectPermissionResource, plan ProjectPermissionInterface) (*AssignmentResult, diag.Diagnostics) {
+func CreateProjectAssignments(ctx context.Context, receiver ProjectPermissionsReceiver, plan ProjectPermissionInterface) (*AssignmentResult, diag.Diagnostics) {
 	assignments, diags := plan.getAssignment(ctx)
 	if diags != nil {
 		return nil, diags
@@ -42,7 +42,7 @@ func CreateProjectAssignments(ctx context.Context, receiver ProjectPermissionRes
 	)
 }
 
-func ComputeProjectAssignments(ctx context.Context, receiver ProjectPermissionResource, state ProjectPermissionInterface) (*AssignmentResult, diag.Diagnostics) {
+func ComputeProjectAssignments(ctx context.Context, receiver ProjectPermissionsReceiver, state ProjectPermissionInterface) (*AssignmentResult, diag.Diagnostics) {
 	assignments, diags := state.getAssignment(ctx)
 	if diags != nil {
 		return nil, diags
@@ -62,7 +62,7 @@ func ComputeProjectAssignments(ctx context.Context, receiver ProjectPermissionRe
 	return ComputeAssignment(ctx, assignedPermissions, *assignmentOrder)
 }
 
-func UpdateProjectAssignments(ctx context.Context, receiver ProjectPermissionResource,
+func UpdateProjectAssignments(ctx context.Context, receiver ProjectPermissionsReceiver,
 	plan ProjectPermissionInterface,
 	state ProjectPermissionInterface,
 	forceUpdate bool) (*AssignmentResult, diag.Diagnostics) {
@@ -103,7 +103,7 @@ func UpdateProjectAssignments(ctx context.Context, receiver ProjectPermissionRes
 	)
 }
 
-func DeleteProjectAssignments(ctx context.Context, receiver ProjectPermissionResource, state ProjectPermissionInterface) diag.Diagnostics {
+func DeleteProjectAssignments(ctx context.Context, receiver ProjectPermissionsReceiver, state ProjectPermissionInterface) diag.Diagnostics {
 	assignments, diags := state.getAssignment(ctx)
 	if diags != nil {
 		return diags
