@@ -169,12 +169,8 @@ func (receiver *ProjectResource) Update(ctx context.Context, request resource.Up
 		return
 	}
 
-	project, err := receiver.client.ProjectService().Update(plan.Key.ValueString(), bamboo.UpdateProject{
-		Name:        plan.Name.ValueString(),
-		Description: plan.Description.ValueString(),
-	})
-
-	if util.TestError(&response.Diagnostics, err, "Failed to update project") {
+	project, err := receiver.client.ProjectService().Read(plan.Key.ValueString())
+	if util.TestError(&response.Diagnostics, err, "Failed to read project") {
 		return
 	}
 
