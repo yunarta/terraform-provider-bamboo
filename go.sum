@@ -159,8 +159,6 @@ github.com/yunarta/terraform-api-transport v1.0.0 h1:7Zp9FiZm4QG8hIPj/odCVjaqXfR
 github.com/yunarta/terraform-api-transport v1.0.0/go.mod h1:KCRrG4fBwMob0+dhyhgZm6ZEsJTk3BmAwjcVlSeq4I0=
 github.com/yunarta/terraform-atlassian-api-client v1.3.0 h1:UKlRUGkH1YzvAY2HqvmoyYwPq35KXTsRmHw4IMKi5M8=
 github.com/yunarta/terraform-atlassian-api-client v1.3.0/go.mod h1:R3gu4RFcs85QBjruvBCQLt3IpMXXl8y6NYmfA976sBM=
-github.com/yunarta/terraform-provider-commons v1.0.0 h1:Zna6HFHe7iOM5LIsJLYCzSOK1VpfZmkTKsVqdSvwMTs=
-github.com/yunarta/terraform-provider-commons v1.0.0/go.mod h1:cMM6yuj5kv5ugou9T9uOwLARlwlI77OfAJXDXzxPqVM=
 github.com/yunarta/terraform-provider-commons v1.0.1 h1:xiygGeHQZVxd0GDBu+8O7jqNwbsSzZf+twLRiNWlTmo=
 github.com/yunarta/terraform-provider-commons v1.0.1/go.mod h1:gXzBv5F0F/52m46qPp8hzYrdQSG/VScTnJXf4muldXg=
 github.com/zclconf/go-cty v1.14.1 h1:t9fyA35fwjjUMcmL5hLER+e/rEPqrbCK1/OSE4SI9KA=
