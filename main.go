@@ -24,7 +24,7 @@ func main() {
 	flag.Parse()
 
 	opts := providerserver.ServeOpts{
-		Address: "github.com/yunarta/terraform-provider-bamboo",
+		Address: "github.com/yunarta/bamboo",
 		Debug:   debug,
 	}
 
