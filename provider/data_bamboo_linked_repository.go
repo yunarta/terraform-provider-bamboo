@@ -2,6 +2,7 @@ package provider
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
@@ -9,6 +10,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/yunarta/terraform-atlassian-api-client/bamboo"
 	"github.com/yunarta/terraform-provider-commons/util"
+	"os"
+	"path/filepath"
 	"strconv"
 )
 
@@ -60,8 +63,10 @@ func (receiver *LinkedRepositoryDataSource) Schema(ctx context.Context, request 
 
 func (receiver *LinkedRepositoryDataSource) Read(ctx context.Context, request datasource.ReadRequest, response *datasource.ReadResponse) {
 	var (
-		data  LinkedRepositoryData
 		diags diag.Diagnostics
+		err   error
+
+		data LinkedRepositoryData
 	)
 
 	diags = request.Config.Get(ctx, &data)
@@ -69,9 +74,25 @@ func (receiver *LinkedRepositoryDataSource) Read(ctx context.Context, request da
 		return
 	}
 
-	repository, err := receiver.client.RepositoryService().Read(data.Name.ValueString())
-	if util.TestError(&response.Diagnostics, err, "Failed to retrieve linked repository") {
-		return
+	cacheDir := filepath.Join(".cache", "bamboo_linked_repository")
+	_ = os.MkdirAll(cacheDir, 0755)
+	filename := filepath.Join(cacheDir, fmt.Sprintf("%s.json", data.Name.ValueString()))
+
+	var repository *bamboo.Repository
+	if _, err := os.Stat(filename); err == nil {
+		fileBytes, err := os.ReadFile(filename)
+		if err != nil {
+			err = json.Unmarshal(fileBytes, repository)
+		}
+	}
+
+	if repository == nil {
+		repository, err = receiver.client.RepositoryService().Read(data.Name.ValueString())
+		if util.TestError(&response.Diagnostics, err, "Failed to retrieve linked repository") {
+			return
+		}
+		marshal, _ := json.Marshal(repository)
+		_ = os.WriteFile(filename, marshal, 0644)
 	}
 
 	if repository == nil {
