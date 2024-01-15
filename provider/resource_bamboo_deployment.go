@@ -275,13 +275,13 @@ func (receiver *DeploymentResource) Update(ctx context.Context, request resource
 		if util.TestError(&response.Diagnostics, err, "Failed to update deployment") {
 			return
 		}
-
-		forceUpdate := !plan.AssignmentVersion.Equal(state.AssignmentVersion)
-		computation, diags = UpdateDeploymentAssignments(ctx, receiver, plan, state, forceUpdate)
-		if util.TestDiagnostic(&response.Diagnostics, diags) {
-			return
-		}
 	}
+
+    forceUpdate := !plan.AssignmentVersion.Equal(state.AssignmentVersion)
+    computation, diags = UpdateDeploymentAssignments(ctx, receiver, plan, state, forceUpdate)
+    if util.TestDiagnostic(&response.Diagnostics, diags) {
+        return
+    }
 
 	diags = receiver.UpdateLinkedRepositories(ctx, deploymentId, plan, state)
 	if util.TestDiagnostic(&response.Diagnostics, diags) {
