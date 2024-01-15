@@ -280,29 +280,18 @@ func (receiver *LinkedRepositoryAccessorResource) Delete(ctx context.Context, re
 			return
 		}
 
-		var repositories []bamboo.Repository
-		var existingRepositories = make([]string, 0)
-
-		repositories, err = receiver.client.RepositoryService().ReadAccessor(repositoryId)
+		var existingRepositories []bamboo.Repository
+		existingRepositories, err = receiver.client.RepositoryService().ReadAccessor(repositoryId)
 		if err != nil {
 			response.Diagnostics.AddError(errorFailedToReadRepositoryAccessor, err.Error())
 			return
 		}
 
-		for _, repository := range repositories {
-			existingRepositories = append(existingRepositories, strconv.Itoa(repository.ID))
-		}
+		err = receiver.removeAccessorsFromRepositories(repositoryId, existingRepositories, inStateRepositories)
 
-		for _, repository := range inStateRepositories {
-
-			if collections.Contains(existingRepositories, repository) {
-				accessorId, _ := strconv.Atoi(repository)
-				err = receiver.client.RepositoryService().RemoveAccessor(repositoryId, accessorId)
-				if err != nil {
-					response.Diagnostics.AddError(errorFailedToRemoveRepositoryAccessor, err.Error())
-					return
-				}
-			}
+		if err != nil {
+			response.Diagnostics.AddError(errorFailedToRemoveRepositoryAccessor, err.Error())
+			return
 		}
 	}
 
@@ -311,4 +300,25 @@ func (receiver *LinkedRepositoryAccessorResource) Delete(ctx context.Context, re
 
 func (receiver *LinkedRepositoryAccessorResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), request, response)
+}
+
+// New function to remove Accessors from Repositories
+func (receiver *LinkedRepositoryAccessorResource) removeAccessorsFromRepositories(repositoryId int, repositories []bamboo.Repository, inStateRepositories []string) error {
+	var existingRepositories = make([]string, 0)
+
+	for _, repository := range repositories {
+		existingRepositories = append(existingRepositories, strconv.Itoa(repository.ID))
+	}
+
+	for _, repository := range inStateRepositories {
+		if collections.Contains(existingRepositories, repository) {
+			accessorId, _ := strconv.Atoi(repository)
+			err := receiver.client.RepositoryService().RemoveAccessor(repositoryId, accessorId)
+			if err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
 }
