@@ -3,7 +3,7 @@ name: build
 # Triggers for when the workflow will run
 on:
   push:
-    branches: [ main ]
+    branches: [ main, develop ]
 
 jobs:
   build:
