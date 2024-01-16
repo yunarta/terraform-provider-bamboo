@@ -2,3 +2,4 @@
 coverage.out
 sonar-project.properties
 .env
+.cache
