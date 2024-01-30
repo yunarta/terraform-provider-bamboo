@@ -18,6 +18,7 @@ import (
 	"github.com/yunarta/terraform-atlassian-api-client/bamboo"
 	"github.com/yunarta/terraform-provider-commons/util"
 	"regexp"
+	"sort"
 	"strconv"
 )
 
@@ -221,6 +222,7 @@ func (receiver *DeploymentResource) Read(ctx context.Context, request resource.R
 		deploymentRepositoryIDs = append(deploymentRepositoryIDs, strconv.Itoa(repository.ID))
 	}
 
+	sort.Strings(deploymentRepositoryIDs)
 	repositoryList, diags := types.ListValueFrom(ctx, types.StringType, deploymentRepositoryIDs)
 	if util.TestDiagnostic(&response.Diagnostics, diags) {
 		return
@@ -277,11 +279,11 @@ func (receiver *DeploymentResource) Update(ctx context.Context, request resource
 		}
 	}
 
-    forceUpdate := !plan.AssignmentVersion.Equal(state.AssignmentVersion)
-    computation, diags = UpdateDeploymentAssignments(ctx, receiver, plan, state, forceUpdate)
-    if util.TestDiagnostic(&response.Diagnostics, diags) {
-        return
-    }
+	forceUpdate := !plan.AssignmentVersion.Equal(state.AssignmentVersion)
+	computation, diags = UpdateDeploymentAssignments(ctx, receiver, plan, state, forceUpdate)
+	if util.TestDiagnostic(&response.Diagnostics, diags) {
+		return
+	}
 
 	diags = receiver.UpdateLinkedRepositories(ctx, deploymentId, plan, state)
 	if util.TestDiagnostic(&response.Diagnostics, diags) {

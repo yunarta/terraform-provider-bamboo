@@ -7,6 +7,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/yunarta/terraform-atlassian-api-client/bamboo"
 	"github.com/yunarta/terraform-provider-commons/util"
+	"sort"
 )
 
 func CreateAttestation(ctx context.Context, permissions *bamboo.ObjectPermission, diagnostics *diag.Diagnostics) (basetypes.MapValue, basetypes.MapValue, diag.Diagnostics) {
@@ -35,6 +36,14 @@ func CreateAttestation(ctx context.Context, permissions *bamboo.ObjectPermission
 			groupInPermission = append(groupInPermission, group.Name)
 			groupPermissionsMap[permission] = groupInPermission
 		}
+	}
+
+	for _, groups := range groupPermissionsMap {
+		sort.Strings(groups)
+	}
+
+	for _, users := range userPermissionsMap {
+		sort.Strings(users)
 	}
 
 	users, diags := types.MapValueFrom(ctx, types.ListType{

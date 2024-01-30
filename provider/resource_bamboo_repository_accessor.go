@@ -3,7 +3,6 @@ package provider
 import (
 	"context"
 	"fmt"
-	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -13,6 +12,7 @@ import (
 	"github.com/yunarta/golang-quality-of-life-pack/collections"
 	"github.com/yunarta/terraform-atlassian-api-client/bamboo"
 	"github.com/yunarta/terraform-provider-commons/util"
+	"sort"
 	"strconv"
 )
 
@@ -166,18 +166,24 @@ func (receiver *LinkedRepositoryAccessorResource) Read(ctx context.Context, requ
 		return
 	}
 
-	var repositoryIds []attr.Value
+	var repositoryIds []string
 	for _, repository := range repositories {
 		accessorId := fmt.Sprintf("%v", repository.ID)
 		if collections.Contains(existingRepositories, accessorId) {
-			repositoryIds = append(repositoryIds, types.StringValue(accessorId))
+			repositoryIds = append(repositoryIds, accessorId)
 		}
+	}
+
+	sort.Strings(repositoryIds)
+	from, diags := types.ListValueFrom(ctx, types.StringType, repositoryIds)
+	if util.TestDiagnostic(&response.Diagnostics, diags) {
+		return
 	}
 
 	diags = response.State.Set(ctx, &LinkedRepositoryAccessorModel{
 		RetainOnDelete: state.RetainOnDelete,
 		ID:             types.StringValue(fmt.Sprintf("%v", repositoryId)),
-		Repositories:   types.ListValueMust(types.StringType, repositoryIds),
+		Repositories:   from,
 	})
 	if util.TestDiagnostic(&response.Diagnostics, diags) {
 		return
