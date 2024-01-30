@@ -245,6 +245,12 @@ func (receiver *LinkedRepositoryResource) Update(ctx context.Context, request re
 		return
 	}
 
+	if repository == nil {
+		// the repository is no longer exists
+		response.Diagnostics.AddError("Linked Repository no longer exists", plan.Name.ValueString())
+		return
+	}
+
 	err = receiver.client.RepositoryService().Update(repository.ID, plan.RssEnabled.ValueBool())
 	if util.TestError(&response.Diagnostics, err, errorFailedToUpdateRepository) {
 		return
