@@ -16,36 +16,36 @@ import (
 )
 
 var (
-	_ resource.Resource                   = &LinkedRepositoryResource{}
-	_ resource.ResourceWithConfigure      = &LinkedRepositoryResource{}
-	_ resource.ResourceWithImportState    = &LinkedRepositoryResource{}
-	_ LinkedRepositoryPermissionsReceiver = &LinkedRepositoryResource{}
-	_ ConfigurableReceiver                = &LinkedRepositoryResource{}
+	_ resource.Resource                   = &ProjectLinkedRepositoryResource{}
+	_ resource.ResourceWithConfigure      = &ProjectLinkedRepositoryResource{}
+	_ resource.ResourceWithImportState    = &ProjectLinkedRepositoryResource{}
+	_ LinkedRepositoryPermissionsReceiver = &ProjectLinkedRepositoryResource{}
+	_ ConfigurableReceiver                = &ProjectLinkedRepositoryResource{}
 )
 
-func NewLinkedRepositoryResource() resource.Resource {
-	return &LinkedRepositoryResource{}
+func NewProjectLinkedRepositoryResource() resource.Resource {
+	return &ProjectLinkedRepositoryResource{}
 }
 
-type LinkedRepositoryResource struct {
+type ProjectLinkedRepositoryResource struct {
 	config BambooProviderConfig
 	client *bamboo.Client
 }
 
-func (receiver *LinkedRepositoryResource) setConfig(config BambooProviderConfig, client *bamboo.Client) {
+func (receiver *ProjectLinkedRepositoryResource) setConfig(config BambooProviderConfig, client *bamboo.Client) {
 	receiver.config = config
 	receiver.client = client
 }
 
-func (receiver *LinkedRepositoryResource) getClient() *bamboo.Client {
+func (receiver *ProjectLinkedRepositoryResource) getClient() *bamboo.Client {
 	return receiver.client
 }
 
-func (receiver *LinkedRepositoryResource) Metadata(ctx context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = request.ProviderTypeName + "_linked_repository"
+func (receiver *ProjectLinkedRepositoryResource) Metadata(ctx context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
+	response.TypeName = request.ProviderTypeName + "_project_linked_repository"
 }
 
-func (receiver *LinkedRepositoryResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
+func (receiver *ProjectLinkedRepositoryResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{
@@ -53,18 +53,15 @@ func (receiver *LinkedRepositoryResource) Schema(ctx context.Context, request re
 			},
 			"name": schema.StringAttribute{
 				Required: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplaceIf(nameCheck, "", ""),
-				},
 			},
 			"rss_enabled": schema.BoolAttribute{
 				Optional: true,
 			},
+			"owner": schema.StringAttribute{
+				Required: true,
+			},
 			"project": schema.StringAttribute{
 				Required: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplaceIf(projectCheck, "", ""),
-				},
 			},
 			"slug": schema.StringAttribute{
 				Required: true,
@@ -84,63 +81,15 @@ func (receiver *LinkedRepositoryResource) Schema(ctx context.Context, request re
 	}
 }
 
-func nameCheck(ctx context.Context, request planmodifier.StringRequest, response *stringplanmodifier.RequiresReplaceIfFuncResponse) {
-	var plan, state LinkedRepositoryModel
-
-	diags := request.Plan.Get(ctx, &plan)
-	if util.TestDiagnostic(&response.Diagnostics, diags) {
-		return
-	}
-
-	diags = request.Plan.Get(ctx, &state)
-	if util.TestDiagnostic(&response.Diagnostics, diags) {
-		return
-	}
-
-	response.RequiresReplace = plan.Name != state.Name && !state.Name.IsNull()
-}
-func projectCheck(ctx context.Context, request planmodifier.StringRequest, response *stringplanmodifier.RequiresReplaceIfFuncResponse) {
-
-	var plan, state LinkedRepositoryModel
-
-	diags := request.Plan.Get(ctx, &plan)
-	if util.TestDiagnostic(&response.Diagnostics, diags) {
-		return
-	}
-
-	diags = request.Plan.Get(ctx, &state)
-	if util.TestDiagnostic(&response.Diagnostics, diags) {
-		return
-	}
-
-	response.RequiresReplace = plan.Project != state.Project && !state.Project.IsNull()
-}
-
-func slugCheck(ctx context.Context, request planmodifier.StringRequest, response *stringplanmodifier.RequiresReplaceIfFuncResponse) {
-	var plan, state LinkedRepositoryModel
-
-	diags := request.Plan.Get(ctx, &plan)
-	if util.TestDiagnostic(&response.Diagnostics, diags) {
-		return
-	}
-
-	diags = request.Plan.Get(ctx, &state)
-	if util.TestDiagnostic(&response.Diagnostics, diags) {
-		return
-	}
-
-	response.RequiresReplace = plan.Slug != state.Slug && !state.Slug.IsNull()
-}
-
-func (receiver *LinkedRepositoryResource) Configure(ctx context.Context, request resource.ConfigureRequest, response *resource.ConfigureResponse) {
+func (receiver *ProjectLinkedRepositoryResource) Configure(ctx context.Context, request resource.ConfigureRequest, response *resource.ConfigureResponse) {
 	ConfigureResource(receiver, ctx, request, response)
 }
 
-func (receiver *LinkedRepositoryResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
+func (receiver *ProjectLinkedRepositoryResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
 	var (
 		diags diag.Diagnostics
 
-		plan LinkedRepositoryModel
+		plan ProjectLinkedRepositoryModel
 	)
 
 	diags = request.Plan.Get(ctx, &plan)
@@ -148,7 +97,8 @@ func (receiver *LinkedRepositoryResource) Create(ctx context.Context, request re
 		return
 	}
 
-	repositoryId, err := receiver.client.RepositoryService().Create(bamboo.CreateRepository{
+	repositoryId, err := receiver.client.RepositoryService().CreateProject(bamboo.CreateProjectRepository{
+		Project:        plan.Owner.ValueString(),
 		Name:           plan.Name.ValueString(),
 		ProjectKey:     strings.ToLower(plan.Project.ValueString()),
 		RepositorySlug: strings.ToLower(plan.Slug.ValueString()),
@@ -178,22 +128,22 @@ func (receiver *LinkedRepositoryResource) Create(ctx context.Context, request re
 	plan.ID = types.StringValue(fmt.Sprintf("%v", repository.ID))
 	diags = response.State.SetAttribute(ctx, path.Root("id"), plan.ID)
 
-	computation, diags := CreateLinkedRepositoryAssignments(ctx, receiver, plan)
+	computation, diags := ComputeProjectLinkedRepositoryAssignments(ctx, receiver, plan)
 	if util.TestDiagnostic(&response.Diagnostics, diags) {
 		return
 	}
 
-	diags = response.State.Set(ctx, NewLinkedRepositoryModel(plan, repository.ID, computation))
+	diags = response.State.Set(ctx, NewProjectLinkedRepositoryModel(plan, repository.ID, computation))
 	if util.TestDiagnostic(&response.Diagnostics, diags) {
 		return
 	}
 }
 
-func (receiver *LinkedRepositoryResource) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
+func (receiver *ProjectLinkedRepositoryResource) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
 	var (
 		diags diag.Diagnostics
 
-		state LinkedRepositoryModel
+		state ProjectLinkedRepositoryModel
 	)
 
 	diags = request.State.Get(ctx, &state)
@@ -201,7 +151,7 @@ func (receiver *LinkedRepositoryResource) Read(ctx context.Context, request reso
 		return
 	}
 
-	repository, err := receiver.client.RepositoryService().Read(state.Name.ValueString())
+	repository, err := receiver.client.RepositoryService().ReadProject(state.Owner.ValueString(), state.Name.ValueString())
 	if util.TestError(&response.Diagnostics, err, errorFailedToReadRepository) {
 		return
 	}
@@ -211,12 +161,12 @@ func (receiver *LinkedRepositoryResource) Read(ctx context.Context, request reso
 		return
 	}
 
-	computation, diags := CreateLinkedRepositoryAssignments(ctx, receiver, state)
+	computation, diags := CreateProjectLinkedRepositoryAssignments(ctx, receiver, state)
 	if util.TestDiagnostic(&response.Diagnostics, diags) {
 		return
 	}
 
-	repositoryModel := NewLinkedRepositoryModel(state, repository.ID, computation)
+	repositoryModel := NewProjectLinkedRepositoryModel(state, repository.ID, computation)
 
 	diags = response.State.Set(ctx, repositoryModel)
 	if util.TestDiagnostic(&response.Diagnostics, diags) {
@@ -224,10 +174,10 @@ func (receiver *LinkedRepositoryResource) Read(ctx context.Context, request reso
 	}
 }
 
-func (receiver *LinkedRepositoryResource) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
+func (receiver *ProjectLinkedRepositoryResource) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
 	var (
 		diags       diag.Diagnostics
-		plan, state LinkedRepositoryModel
+		plan, state ProjectLinkedRepositoryModel
 	)
 
 	diags = request.Plan.Get(ctx, &plan)
@@ -240,7 +190,7 @@ func (receiver *LinkedRepositoryResource) Update(ctx context.Context, request re
 		return
 	}
 
-	repository, err := receiver.client.RepositoryService().Read(plan.Name.ValueString())
+	repository, err := receiver.client.RepositoryService().ReadProject(plan.Owner.ValueString(), plan.Name.ValueString())
 	if util.TestError(&response.Diagnostics, err, errorFailedToReadRepository) {
 		return
 	}
@@ -257,12 +207,12 @@ func (receiver *LinkedRepositoryResource) Update(ctx context.Context, request re
 	}
 
 	forceUpdate := !plan.AssignmentVersion.Equal(state.AssignmentVersion)
-	computation, diags := UpdateLinkedRepositoryAssignments(ctx, receiver, plan, state, forceUpdate)
+	computation, diags := UpdateProjectLinkedRepositoryAssignments(ctx, receiver, plan, state, forceUpdate)
 	if util.TestDiagnostic(&response.Diagnostics, diags) {
 		return
 	}
 
-	repositoryModel := NewLinkedRepositoryModel(plan, repository.ID, computation)
+	repositoryModel := NewProjectLinkedRepositoryModel(plan, repository.ID, computation)
 
 	diags = response.State.Set(ctx, repositoryModel)
 	if util.TestDiagnostic(&response.Diagnostics, diags) {
@@ -270,10 +220,10 @@ func (receiver *LinkedRepositoryResource) Update(ctx context.Context, request re
 	}
 }
 
-func (receiver *LinkedRepositoryResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
+func (receiver *ProjectLinkedRepositoryResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
 	response.State.RemoveResource(ctx)
 }
 
-func (receiver *LinkedRepositoryResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
+func (receiver *ProjectLinkedRepositoryResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
 	resource.ImportStatePassthroughID(ctx, path.Root("name"), request, response)
 }

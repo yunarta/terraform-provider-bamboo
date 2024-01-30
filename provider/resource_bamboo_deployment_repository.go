@@ -12,6 +12,7 @@ import (
 	"github.com/yunarta/golang-quality-of-life-pack/collections"
 	"github.com/yunarta/terraform-atlassian-api-client/bamboo"
 	"github.com/yunarta/terraform-provider-commons/util"
+	"sort"
 	"strconv"
 )
 
@@ -142,6 +143,7 @@ func (receiver *DeploymentRepositoriesResource) Read(ctx context.Context, reques
 		deploymentRepositoryIDs = append(deploymentRepositoryIDs, strconv.Itoa(repository.ID))
 	}
 
+	sort.Strings(deploymentRepositoryIDs)
 	listValue, diags := types.ListValueFrom(ctx, types.StringType, deploymentRepositoryIDs)
 	if util.TestDiagnostic(&response.Diagnostics, diags) {
 		return

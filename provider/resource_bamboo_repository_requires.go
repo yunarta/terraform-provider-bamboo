@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
-	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -16,6 +15,7 @@ import (
 	"github.com/yunarta/terraform-atlassian-api-client/bamboo"
 	"github.com/yunarta/terraform-provider-commons/util"
 	"regexp"
+	"sort"
 	"strconv"
 )
 
@@ -145,7 +145,7 @@ func (receiver *LinkedRepositoryDependencyResource) Read(ctx context.Context, re
 	var state LinkedRepositoryDependencyModel
 	var err error
 	var dependencies = make([]string, 0)
-	var newDependencies []attr.Value
+	var newDependencies []string
 
 	if util.TestDiagnostics(&response.Diagnostics,
 		request.State.Get(ctx, &state),
@@ -178,16 +178,22 @@ func (receiver *LinkedRepositoryDependencyResource) Read(ctx context.Context, re
 
 		for _, accessor := range repositories {
 			if repositoryId == accessor.ID {
-				newDependencies = append(newDependencies, types.StringValue(strconv.Itoa(dependency)))
+				newDependencies = append(newDependencies, strconv.Itoa(dependency))
 				break
 			}
 		}
 	}
 
-	diags := response.State.Set(ctx, &LinkedRepositoryDependencyModel{
+	sort.Strings(newDependencies)
+	from, diags := types.ListValueFrom(ctx, types.StringType, newDependencies)
+	if util.TestDiagnostic(&response.Diagnostics, diags) {
+		return
+	}
+
+	diags = response.State.Set(ctx, &LinkedRepositoryDependencyModel{
 		RetainOnDelete: state.RetainOnDelete,
 		ID:             types.StringValue(fmt.Sprintf("%v", repositoryId)),
-		Repositories:   types.ListValueMust(types.StringType, newDependencies),
+		Repositories:   from,
 	})
 	if util.TestDiagnostic(&response.Diagnostics, diags) {
 		return

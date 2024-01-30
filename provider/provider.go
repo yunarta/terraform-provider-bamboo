@@ -89,6 +89,7 @@ func (p *BambooProvider) Resources(ctx context.Context) []func() resource.Resour
 		NewProjectRepositoriesResource,
 		NewDeploymentResource,
 		NewDeploymentRepositoryResource,
+		NewProjectLinkedRepositoryResource,
 		NewLinkedRepositoryResource,
 		NewLinkedRepositoryAccessorResource,
 		NewLinkedRepositoryDependencyResource,

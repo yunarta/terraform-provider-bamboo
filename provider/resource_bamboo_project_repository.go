@@ -13,6 +13,7 @@ import (
 	"github.com/yunarta/golang-quality-of-life-pack/collections"
 	"github.com/yunarta/terraform-atlassian-api-client/bamboo"
 	"github.com/yunarta/terraform-provider-commons/util"
+	"sort"
 	"strconv"
 )
 
@@ -118,6 +119,7 @@ func (receiver *ProjectRepositoriesResource) Read(ctx context.Context, request r
 		diags                 diag.Diagnostics
 		err                   error
 		projectRepositoryIDs  = make([]string, 0)
+		plannedRepositoryIDs  = make([]string, 0)
 		existingRepositoryIDs = make([]string, 0)
 	)
 
@@ -136,17 +138,18 @@ func (receiver *ProjectRepositoriesResource) Read(ctx context.Context, request r
 		projectRepositoryIDs = append(projectRepositoryIDs, strconv.Itoa(repository.ID))
 	}
 
-	diags = state.Repositories.ElementsAs(ctx, &projectRepositoryIDs, true)
+	diags = state.Repositories.ElementsAs(ctx, &plannedRepositoryIDs, true)
 	if util.TestDiagnostic(&response.Diagnostics, diags) {
 		return
 	}
 
-	for _, project := range projectRepositoryIDs {
+	for _, project := range plannedRepositoryIDs {
 		if collections.Contains(projectRepositoryIDs, project) {
 			existingRepositoryIDs = append(existingRepositoryIDs, project)
 		}
 	}
 
+	sort.Strings(existingRepositoryIDs)
 	listValue, diags := types.ListValueFrom(ctx, types.StringType, existingRepositoryIDs)
 	if util.TestDiagnostic(&response.Diagnostics, diags) {
 		return
