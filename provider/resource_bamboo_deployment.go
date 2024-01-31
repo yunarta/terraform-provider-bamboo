@@ -3,6 +3,10 @@ package provider
 import (
 	"context"
 	"fmt"
+	"regexp"
+	"sort"
+	"strconv"
+
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
@@ -17,9 +21,6 @@ import (
 	"github.com/yunarta/golang-quality-of-life-pack/collections"
 	"github.com/yunarta/terraform-atlassian-api-client/bamboo"
 	"github.com/yunarta/terraform-provider-commons/util"
-	"regexp"
-	"sort"
-	"strconv"
 )
 
 var (
@@ -277,12 +278,12 @@ func (receiver *DeploymentResource) Update(ctx context.Context, request resource
 		if util.TestError(&response.Diagnostics, err, "Failed to update deployment") {
 			return
 		}
-	}
 
-	forceUpdate := !plan.AssignmentVersion.Equal(state.AssignmentVersion)
-	computation, diags = UpdateDeploymentAssignments(ctx, receiver, plan, state, forceUpdate)
-	if util.TestDiagnostic(&response.Diagnostics, diags) {
-		return
+		forceUpdate := !plan.AssignmentVersion.Equal(state.AssignmentVersion)
+		computation, diags = UpdateDeploymentAssignments(ctx, receiver, plan, state, forceUpdate)
+		if util.TestDiagnostic(&response.Diagnostics, diags) {
+			return
+		}
 	}
 
 	diags = receiver.UpdateLinkedRepositories(ctx, deploymentId, plan, state)
