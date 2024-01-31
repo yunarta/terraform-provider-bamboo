@@ -54,7 +54,7 @@ func (receiver *LinkedRepositoryResource) Schema(ctx context.Context, request re
 			"name": schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplaceIf(nameCheck, "", ""),
+					stringplanmodifier.RequiresReplaceIf(linkedRepositoryNameCheck, "", ""),
 				},
 			},
 			"rss_enabled": schema.BoolAttribute{
@@ -62,15 +62,9 @@ func (receiver *LinkedRepositoryResource) Schema(ctx context.Context, request re
 			},
 			"project": schema.StringAttribute{
 				Required: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplaceIf(projectCheck, "", ""),
-				},
 			},
 			"slug": schema.StringAttribute{
 				Required: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplaceIf(slugCheck, "", ""),
-				},
 			},
 			"assignment_version": schema.StringAttribute{
 				Optional: true,
@@ -84,7 +78,7 @@ func (receiver *LinkedRepositoryResource) Schema(ctx context.Context, request re
 	}
 }
 
-func nameCheck(ctx context.Context, request planmodifier.StringRequest, response *stringplanmodifier.RequiresReplaceIfFuncResponse) {
+func linkedRepositoryNameCheck(ctx context.Context, request planmodifier.StringRequest, response *stringplanmodifier.RequiresReplaceIfFuncResponse) {
 	var plan, state LinkedRepositoryModel
 
 	diags := request.Plan.Get(ctx, &plan)
@@ -92,44 +86,12 @@ func nameCheck(ctx context.Context, request planmodifier.StringRequest, response
 		return
 	}
 
-	diags = request.Plan.Get(ctx, &state)
+	diags = request.State.Get(ctx, &state)
 	if util.TestDiagnostic(&response.Diagnostics, diags) {
 		return
 	}
 
-	response.RequiresReplace = plan.Name != state.Name && !state.Name.IsNull()
-}
-func projectCheck(ctx context.Context, request planmodifier.StringRequest, response *stringplanmodifier.RequiresReplaceIfFuncResponse) {
-
-	var plan, state LinkedRepositoryModel
-
-	diags := request.Plan.Get(ctx, &plan)
-	if util.TestDiagnostic(&response.Diagnostics, diags) {
-		return
-	}
-
-	diags = request.Plan.Get(ctx, &state)
-	if util.TestDiagnostic(&response.Diagnostics, diags) {
-		return
-	}
-
-	response.RequiresReplace = plan.Project != state.Project && !state.Project.IsNull()
-}
-
-func slugCheck(ctx context.Context, request planmodifier.StringRequest, response *stringplanmodifier.RequiresReplaceIfFuncResponse) {
-	var plan, state LinkedRepositoryModel
-
-	diags := request.Plan.Get(ctx, &plan)
-	if util.TestDiagnostic(&response.Diagnostics, diags) {
-		return
-	}
-
-	diags = request.Plan.Get(ctx, &state)
-	if util.TestDiagnostic(&response.Diagnostics, diags) {
-		return
-	}
-
-	response.RequiresReplace = plan.Slug != state.Slug && !state.Slug.IsNull()
+	response.RequiresReplace = !plan.Name.Equal(state.Name) && !state.Name.IsNull()
 }
 
 func (receiver *LinkedRepositoryResource) Configure(ctx context.Context, request resource.ConfigureRequest, response *resource.ConfigureResponse) {
@@ -164,7 +126,7 @@ func (receiver *LinkedRepositoryResource) Create(ctx context.Context, request re
 		return
 	}
 
-	err = receiver.client.RepositoryService().Update(repositoryId, plan.RssEnabled.ValueBool())
+	err = receiver.client.RepositoryService().EnableCI(repositoryId, plan.RssEnabled.ValueBool())
 	if util.TestError(&response.Diagnostics, err, errorFailedToUpdateRepository) {
 		return
 	}
@@ -251,9 +213,27 @@ func (receiver *LinkedRepositoryResource) Update(ctx context.Context, request re
 		return
 	}
 
-	err = receiver.client.RepositoryService().Update(repository.ID, plan.RssEnabled.ValueBool())
+	err = receiver.client.RepositoryService().EnableCI(repository.ID, plan.RssEnabled.ValueBool())
 	if util.TestError(&response.Diagnostics, err, errorFailedToUpdateRepository) {
 		return
+	}
+
+	if !plan.Project.Equal(state.Project) || !plan.Slug.Equal(state.Slug) {
+		err = receiver.client.RepositoryService().Update(repository.ID, bamboo.CreateRepository{
+			Name:           plan.Name.ValueString(),
+			ProjectKey:     strings.ToLower(plan.Project.ValueString()),
+			RepositorySlug: strings.ToLower(plan.Slug.ValueString()),
+			ServerId:       receiver.config.BambooRss.Server.ValueString(),
+			ServerName:     receiver.config.BambooRss.Name.ValueString(),
+			CloneUrl: strings.ToLower(fmt.Sprintf(
+				receiver.config.BambooRss.CloneUrl.ValueString(),
+				plan.Project.ValueString(),
+				plan.Slug.ValueString(),
+			)),
+		})
+		if util.TestError(&response.Diagnostics, err, errorFailedToUpdateRepository) {
+			return
+		}
 	}
 
 	forceUpdate := !plan.AssignmentVersion.Equal(state.AssignmentVersion)
