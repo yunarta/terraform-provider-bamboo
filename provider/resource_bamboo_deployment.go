@@ -230,7 +230,10 @@ func (receiver *DeploymentResource) Read(ctx context.Context, request resource.R
 	}
 
 	deploymentModel := NewDeploymentModel(state, deployment, computation)
-	deploymentModel.Repositories = repositoryList
+
+	if len(deploymentRepositoryIDs) > 0 {
+		deploymentModel.Repositories = repositoryList
+	}
 
 	diags = response.State.Set(ctx, deploymentModel)
 	if util.TestDiagnostic(&response.Diagnostics, diags) {
