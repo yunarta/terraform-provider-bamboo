@@ -5,7 +5,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/yunarta/terraform-atlassian-api-client/bamboo"
-	"github.com/yunarta/terraform-provider-commons/util"
 )
 
 type ProjectModel struct {
@@ -37,7 +36,7 @@ func NewProjectModel(plan ProjectModel, project *bamboo.Project, assignmentResul
 		RetainOnDelete:    plan.RetainOnDelete,
 		Key:               types.StringValue(project.Key),
 		Name:              types.StringValue(project.Name),
-		Description:       util.NullString(project.Description),
+		Description:       types.StringValue(project.Description),
 		AssignmentVersion: plan.AssignmentVersion,
 		Assignments:       plan.Assignments,
 		ComputedUsers:     assignmentResult.ComputedUsers,
