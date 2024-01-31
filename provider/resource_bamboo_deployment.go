@@ -284,6 +284,11 @@ func (receiver *DeploymentResource) Update(ctx context.Context, request resource
 		if util.TestDiagnostic(&response.Diagnostics, diags) {
 			return
 		}
+	} else {
+		computation, diags = ComputeDeploymentAssignments(ctx, receiver, state)
+		if util.TestDiagnostic(&response.Diagnostics, diags) {
+			return
+		}
 	}
 
 	diags = receiver.UpdateLinkedRepositories(ctx, deploymentId, plan, state)
