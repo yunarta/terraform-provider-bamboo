@@ -3,6 +3,8 @@ package provider
 import (
 	"context"
 	"fmt"
+	"strings"
+
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -12,7 +14,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/yunarta/terraform-atlassian-api-client/bamboo"
 	"github.com/yunarta/terraform-provider-commons/util"
-	"strings"
 )
 
 var (
@@ -105,6 +106,11 @@ func (receiver *LinkedRepositoryResource) Create(ctx context.Context, request re
 		plan LinkedRepositoryModel
 	)
 
+	repository, err := receiver.client.RepositoryService().Read(plan.Name.ValueString())
+	if err == nil {
+		response.Diagnostics.AddError("linked repository already exists", "Unable to create as the requested repository already exists")
+	}
+
 	diags = request.Plan.Get(ctx, &plan)
 	if util.TestDiagnostic(&response.Diagnostics, diags) {
 		return
@@ -131,7 +137,7 @@ func (receiver *LinkedRepositoryResource) Create(ctx context.Context, request re
 		return
 	}
 
-	repository := &bamboo.Repository{
+	repository = &bamboo.Repository{
 		ID:         repositoryId,
 		Name:       plan.Name.ValueString(),
 		RssEnabled: plan.RssEnabled.ValueBool(),
