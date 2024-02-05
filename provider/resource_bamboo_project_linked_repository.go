@@ -160,6 +160,13 @@ func (receiver *ProjectLinkedRepositoryResource) Create(ctx context.Context, req
 		return
 	}
 
+	if plan.RssEnabled.ValueBool() {
+		err = receiver.client.RepositoryService().ScanCI(repository.ID)
+		if util.TestError(&response.Diagnostics, err, "Failed to execute scan repository") {
+			return
+		}
+	}
+
 	repository = &bamboo.Repository{
 		ID:         repositoryId,
 		Name:       plan.Name.ValueString(),
@@ -245,6 +252,13 @@ func (receiver *ProjectLinkedRepositoryResource) Update(ctx context.Context, req
 	err = receiver.client.RepositoryService().EnableCI(repository.ID, plan.RssEnabled.ValueBool())
 	if util.TestError(&response.Diagnostics, err, errorFailedToUpdateRepository) {
 		return
+	}
+
+	if plan.RssEnabled.ValueBool() {
+		err = receiver.client.RepositoryService().ScanCI(repository.ID)
+		if util.TestError(&response.Diagnostics, err, "Failed to execute scan repository") {
+			return
+		}
 	}
 
 	if !plan.Project.Equal(state.Project) || !plan.Slug.Equal(state.Slug) {
