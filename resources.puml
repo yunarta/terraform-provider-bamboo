@@ -1,0 +1,225 @@
+@startuml
+
+json bamboo_project {
+    "retain_on_delete": "retain project on deletion",
+    "key": "project key",
+    "name": "project_name",
+    "description": "description",
+    "assignment_version": "arbitrary string to force assignment update",
+    "computed_users (c)": [
+        {
+        "name":"username",
+        "permission": "permission"
+        }
+    ],
+    "computed_groups (c)": [
+        {
+        "name":"username",
+        "permission": "permission"
+        }
+    ],
+    "assignments": [
+        {
+        "users": "list of user",
+        "groups": "list of groups",
+        "permissions": "list of permission",
+        "priority": "priority"
+        }
+    ]
+}
+
+json bamboo_project_variable {
+    "project": "project key",
+    "name": "variable name",
+    "value": "value",
+    "secret": "secret value"
+}
+
+json bamboo_project_permissions {
+    "key": "project key",
+    "assignment_version": "arbitrary string to force assignment update",
+    "computed_users (c)": [
+        {
+        "name":"username",
+        "permission": "permission"
+        }
+    ],
+    "computed_groups (c)": [
+        {
+        "name":"username",
+        "permission": "permission"
+        }
+    ],
+    "assignments": [
+        {
+        "users": "list of user",
+        "groups": "list of groups",
+        "permissions": "list of permission",
+        "priority": "priority"
+        }
+    ]
+}
+
+json bamboo_project_linked_repository {
+    "id (c)": "linked repository id",
+    "name": "repository name",
+    "rss_enabled": "enable spec",
+    "owner": "project owner",
+    "project": "bitbucket project",
+    "slug": "bitbucket repo slug",
+    "assignment_version": "arbitrary string to force assignment update",
+    "computed_users (c)": [
+        {
+        "name":"username",
+        "permission": "permission"
+        }
+    ],
+    "computed_groups (c)": [
+        {
+        "name":"username",
+        "permission": "permission"
+        }
+    ],
+    "assignments": [
+        {
+        "users": "list of user",
+        "groups": "list of groups",
+        "permissions": "list of permission",
+        "priority": "priority"
+        }
+    ]
+}
+
+json bamboo_project_repository {
+    "retain_on_delete": "retain permission on delete",
+    "key": "project key",
+    "repositories": ["list of repositories"]
+}
+
+json bamboo_deployment {
+    "id (c)": "deployment id",
+    "retain_on_delete": "retain deployment on deletion",
+    "name": "name",
+    "plan_key": "plan key",
+    "description": "description",
+    "repository_specs_managed (c)": "indicator of managed by spec",
+    "repositories": ["list of repository"],
+    "assignment_version": "arbitrary string to force assignment update",
+    "computed_users (c)": [
+        {
+        "name":"username",
+        "permission": "permission"
+        }
+    ],
+    "computed_groups (c)": [
+        {
+        "name":"username",
+        "permission": "permission"
+        }
+    ],
+    "assignments": [
+        {
+        "users": "list of user",
+        "groups": "list of groups",
+        "permissions": "list of permission",
+        "priority": "priority"
+        }
+    ]
+}
+
+json bamboo_deployment_repository {
+    "retain_on_delete": "retain permission on delete",
+    "id": "deployment id",
+    "repositories": ["list of repositories"]
+}
+
+json bamboo_linked_repository {
+    "id (c)": "linked repository id",
+    "name": "repository name",
+    "rss_enabled": "enable spec",
+    "project": "bitbucket project",
+    "slug": "bitbucket repo slug",
+    "assignment_version": "arbitrary string to force assignment update",
+    "computed_users (c)": [
+        {
+        "name":"username",
+        "permission": "permission"
+        }
+    ],
+    "computed_groups (c)": [
+        {
+        "name":"username",
+        "permission": "permission"
+        }
+    ],
+    "assignments": [
+        {
+        "users": "list of user",
+        "groups": "list of groups",
+        "permissions": "list of permission",
+        "priority": "priority"
+        }
+    ]
+}
+
+json bamboo_repository_accessor {
+    "retain_on_delete": "retain permission on delete",
+    "id": "repository target",
+    "repositories": ["list of repositories to access the target"]
+}
+
+json bamboo_repository_requires {
+    "retain_on_delete": "retain permission on delete",
+    "id": "repository asking permission",
+    "requires": ["list of repositories to be given permission"]
+}
+
+json data_bamboo_project {
+    "key": "project key",
+    "name": "name",
+     "users (c)": {
+        "permission_name": [
+            "list of users"
+        ],
+        "permission_name": [
+            "list of groups"
+        ]
+    },
+    "groups (c)": {
+        "permission_name": [
+            "list of groups"
+        ],
+        "permission_name": [
+            "list of groups"
+        ]
+    }
+}
+
+json data_bamboo_deployment {
+    "id": "deployment id",
+    "name": "name",
+    "users (c)": {
+        "permission_name": [
+            "list of users"
+        ],
+        "permission_name": [
+            "list of groups"
+        ]
+    },
+    "groups (c)": {
+        "permission_name": [
+            "list of groups"
+        ],
+        "permission_name": [
+            "list of groups"
+        ]
+    }
+}
+
+json data_bamboo_linked_repository {
+    "name": "repository name",
+    "id (c)": "repository id"
+}
+
+
+@enduml
