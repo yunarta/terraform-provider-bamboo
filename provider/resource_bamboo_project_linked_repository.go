@@ -161,7 +161,7 @@ func (receiver *ProjectLinkedRepositoryResource) Create(ctx context.Context, req
 	}
 
 	if plan.RssEnabled.ValueBool() {
-		err = receiver.client.RepositoryService().ScanCI(repository.ID)
+		err = receiver.client.RepositoryService().ScanCI(repositoryId)
 		if util.TestError(&response.Diagnostics, err, "Failed to execute scan repository") {
 			return
 		}
