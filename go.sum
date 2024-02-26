@@ -63,6 +63,8 @@ github.com/yunarta/terraform-api-transport v1.0.0 h1:7Zp9FiZm4QG8hIPj/odCVjaqXfR
 github.com/yunarta/terraform-api-transport v1.0.0/go.mod h1:KCRrG4fBwMob0+dhyhgZm6ZEsJTk3BmAwjcVlSeq4I0=
 github.com/yunarta/terraform-atlassian-api-client v1.3.8 h1:rDFF3w0UE1YUFiRZwR08y0forDVqizJWPGCL499EsiQ=
 github.com/yunarta/terraform-atlassian-api-client v1.3.8/go.mod h1:R3gu4RFcs85QBjruvBCQLt3IpMXXl8y6NYmfA976sBM=
+github.com/yunarta/terraform-atlassian-api-client v1.3.9 h1:sMNxGdt6+nB2jL8NA4spEQrQaN4g4TgB6eMQu95qz54=
+github.com/yunarta/terraform-atlassian-api-client v1.3.9/go.mod h1:R3gu4RFcs85QBjruvBCQLt3IpMXXl8y6NYmfA976sBM=
 github.com/yunarta/terraform-provider-commons v1.0.1 h1:xiygGeHQZVxd0GDBu+8O7jqNwbsSzZf+twLRiNWlTmo=
 github.com/yunarta/terraform-provider-commons v1.0.1/go.mod h1:gXzBv5F0F/52m46qPp8hzYrdQSG/VScTnJXf4muldXg=
 golang.org/x/net v0.18.0 h1:mIYleuAkSbHh0tCv7RvjL3F6ZVbLjq4+R7zbOn3Kokg=

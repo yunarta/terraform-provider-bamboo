@@ -2,12 +2,14 @@ package provider
 
 import (
 	"context"
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/yunarta/terraform-atlassian-api-client/bamboo"
 	"github.com/yunarta/terraform-provider-commons/util"
 )
@@ -44,11 +46,8 @@ func (receiver *AgentAssignmentResource) Metadata(ctx context.Context, request r
 func (receiver *AgentAssignmentResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"type": schema.StringAttribute{
-				Required: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplaceIfConfigured(),
-				},
+			"id": schema.Int64Attribute{
+				Computed: true,
 			},
 			"agent": schema.Int64Attribute{
 				Required: true,
@@ -56,10 +55,35 @@ func (receiver *AgentAssignmentResource) Schema(ctx context.Context, request res
 					int64planmodifier.RequiresReplaceIfConfigured(),
 				},
 			},
-			"deployment": schema.Int64Attribute{
+			"type": schema.StringAttribute{
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplaceIfConfigured(),
+				},
+				Validators: []validator.String{
+					stringvalidator.OneOf("AGENT", "IMAGE", "EPHEMERAL"),
+				},
+			},
+			"executable_id": schema.Int64Attribute{
 				Optional: true,
 				PlanModifiers: []planmodifier.Int64{
 					int64planmodifier.RequiresReplaceIfConfigured(),
+				},
+			},
+			//"executable_name": schema.StringAttribute{
+			//	Optional: true,
+			//	PlanModifiers: []planmodifier.String{
+			//		stringplanmodifier.RequiresReplaceIfConfigured(),
+			//	},
+			//},
+			"executable_type": schema.StringAttribute{
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplaceIfConfigured(),
+				},
+				Validators: []validator.String{
+					stringvalidator.OneOf("DEPLOYMENT_PROJECT"),
+					//stringvalidator.OneOf("PROJECT", "PLAN", "JOB", "DEPLOYMENT_PROJECT", "ENVIRONMENT"),
 				},
 			},
 		},
@@ -82,11 +106,11 @@ func (receiver *AgentAssignmentResource) Create(ctx context.Context, request res
 		return
 	}
 
-	err := receiver.client.AgentAssignmentService().Create(bamboo.AgentAssignment{
-		ExecutorType:   plan.Type.ValueString(),
-		ExecutorId:     plan.AgentId.ValueInt64(),
-		EntityId:       plan.DeploymentId.ValueInt64(),
-		AssignmentType: "DEPLOYMENT_PROJECT",
+	err := receiver.client.AgentAssignmentService().Create(bamboo.AgentAssignmentRequest{
+		ExecutorType:   plan.Type,
+		ExecutorId:     plan.AgentId,
+		EntityId:       plan.ExecutableId,
+		AssignmentType: plan.ExecutableType,
 	})
 
 	if util.TestError(&response.Diagnostics, err, "Failed to create assignment") {
@@ -100,21 +124,49 @@ func (receiver *AgentAssignmentResource) Create(ctx context.Context, request res
 }
 
 func (receiver *AgentAssignmentResource) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
-	var (
-		diags diag.Diagnostics
-
-		state AgentAssignmentModel
-	)
-
-	diags = request.State.Get(ctx, &state)
-	if util.TestDiagnostic(&response.Diagnostics, diags) {
-		return
-	}
-
-	diags = response.State.Set(ctx, state)
-	if util.TestDiagnostic(&response.Diagnostics, diags) {
-		return
-	}
+	//var (
+	//	diags diag.Diagnostics
+	//	err error
+	//
+	//	state AgentAssignmentModel
+	//)
+	//
+	//diags = request.State.Get(ctx, &state)
+	//if util.TestDiagnostic(&response.Diagnostics, diags) {
+	//	return
+	//}
+	//
+	//diags = response.State.Set(ctx, state)
+	//if util.TestDiagnostic(&response.Diagnostics, diags) {
+	//	return
+	//}
+	//
+	//cacheDir := filepath.Join(".cache", "agent")
+	//_ = os.MkdirAll(cacheDir, 0755)
+	//filename := filepath.Join(cacheDir, fmt.Sprintf("%d.json", state.AgentId))
+	//
+	//var assignmentList *[]bamboo.AgentAssignment
+	//if _, err := os.Stat(filename); err == nil {
+	//	fileBytes, err := os.ReadFile(filename)
+	//	if err != nil {
+	//		err = json.Unmarshal(fileBytes, assignmentList)
+	//	}
+	//}
+	//
+	//if assignmentList == nil {
+	//	assignmentList, err = receiver.client.AgentAssignmentService().Read(bamboo.AgentQuery{
+	//		ExecutorType: state.Type,
+	//		ExecutorId:   state.AgentId,
+	//	})
+	//	if util.TestError(&response.Diagnostics, err, "Failed to retrieve agent assignments") {
+	//		return
+	//	}
+	//
+	//	marshal, _ := json.Marshal(assignmentList)
+	//	_ = os.WriteFile(filename, marshal, 0644)
+	//}
+	//
+	//assignmentList
 }
 
 func (receiver *AgentAssignmentResource) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
@@ -134,14 +186,14 @@ func (receiver *AgentAssignmentResource) Update(ctx context.Context, request res
 		return
 	}
 
-	err := receiver.client.AgentAssignmentService().Create(bamboo.AgentAssignment{
-		ExecutorType:   plan.Type.ValueString(),
-		ExecutorId:     plan.AgentId.ValueInt64(),
-		EntityId:       plan.DeploymentId.ValueInt64(),
-		AssignmentType: "DEPLOYMENT_PROJECT",
+	err := receiver.client.AgentAssignmentService().Create(bamboo.AgentAssignmentRequest{
+		ExecutorType:   plan.Type,
+		ExecutorId:     plan.AgentId,
+		EntityId:       plan.ExecutableId,
+		AssignmentType: plan.ExecutableType,
 	})
 
-	if util.TestError(&response.Diagnostics, err, "Failed to update project variable") {
+	if util.TestError(&response.Diagnostics, err, "Failed to update agent assignment") {
 		return
 	}
 
@@ -162,11 +214,11 @@ func (receiver *AgentAssignmentResource) Delete(ctx context.Context, request res
 		return
 	}
 
-	err := receiver.client.AgentAssignmentService().Delete(bamboo.AgentAssignment{
-		ExecutorType:   state.Type.ValueString(),
-		ExecutorId:     state.AgentId.ValueInt64(),
-		EntityId:       state.DeploymentId.ValueInt64(),
-		AssignmentType: "DEPLOYMENT_PROJECT",
+	err := receiver.client.AgentAssignmentService().Delete(bamboo.AgentAssignmentRequest{
+		ExecutorType:   state.Type,
+		ExecutorId:     state.AgentId,
+		EntityId:       state.ExecutableId,
+		AssignmentType: state.ExecutableType,
 	})
 	if util.TestError(&response.Diagnostics, err, "Failed to delete assignment") {
 		return
