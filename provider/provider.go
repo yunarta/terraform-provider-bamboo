@@ -8,6 +8,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/yunarta/terraform-api-transport/transport"
 	"github.com/yunarta/terraform-atlassian-api-client/bamboo"
+	"os"
+	"path/filepath"
 )
 
 type BambooProvider struct {
@@ -58,6 +60,8 @@ func (p *BambooProvider) Configure(ctx context.Context, request provider.Configu
 	if response.Diagnostics.HasError() {
 		return
 	}
+
+	_ = os.RemoveAll(filepath.Join(".cache"))
 
 	providerData := &BambooProviderData{
 		config: config,
