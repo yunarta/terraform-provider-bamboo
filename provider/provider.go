@@ -83,6 +83,7 @@ func (p *BambooProvider) DataSources(ctx context.Context) []func() datasource.Da
 		NewLinkedRepositoryDataSource,
 		NewDeploymentDataSource,
 		NewProjectDataSource,
+		NewProjectPermissionsDataSource,
 	}
 }
 
