@@ -8,6 +8,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/yunarta/terraform-api-transport/transport"
 	"github.com/yunarta/terraform-atlassian-api-client/bamboo"
+	"os"
+	"path/filepath"
 )
 
 type BambooProvider struct {
@@ -59,6 +61,8 @@ func (p *BambooProvider) Configure(ctx context.Context, request provider.Configu
 		return
 	}
 
+	_ = os.RemoveAll(filepath.Join(".cache"))
+
 	providerData := &BambooProviderData{
 		config: config,
 		client: bamboo.NewBambooClient(
@@ -79,6 +83,7 @@ func (p *BambooProvider) DataSources(ctx context.Context) []func() datasource.Da
 		NewLinkedRepositoryDataSource,
 		NewDeploymentDataSource,
 		NewProjectDataSource,
+		NewProjectPermissionsDataSource,
 	}
 }
 
