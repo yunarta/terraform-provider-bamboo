@@ -3,12 +3,12 @@
 page_title: "bamboo Provider"
 subcategory: ""
 description: |-
-  
+  Bamboo provider.
 ---
 
 # bamboo Provider
 
-
+Bamboo provider.
 
 
 
@@ -17,16 +17,22 @@ description: |-
 
 ### Optional
 
-- `bamboo` (Block, Optional) (see [below for nested schema](#nestedblock--bamboo))
-- `bamboo_rss` (Block, Optional) (see [below for nested schema](#nestedblock--bamboo_rss))
+- `bamboo` (Block, Optional) Bamboo integration definition. (see [below for nested schema](#nestedblock--bamboo))
+- `bamboo_rss` (Block, Optional) Bamboo RSS definition.
+
+In order to get the value properly, you need to export your linked repository into local file system and retrieve the value from the exported YAML.
+
+See bamboo rest/api/1.0/export/repository/name/{name}. 
+
+Export configuration of a linked repository to YAML format (see [below for nested schema](#nestedblock--bamboo_rss))
 
 <a id="nestedblock--bamboo"></a>
 ### Nested Schema for `bamboo`
 
 Required:
 
-- `endpoint` (String)
-- `token` (String, Sensitive)
+- `endpoint` (String) Bamboo end point url without trailing slash.
+- `token` (String, Sensitive) Bamboo personal access token.
 
 
 <a id="nestedblock--bamboo_rss"></a>
@@ -34,6 +40,10 @@ Required:
 
 Required:
 
-- `clone_url` (String)
-- `name` (String)
-- `server` (String)
+- `clone_url` (String) Clone URL of the Bitbucket data center.
+
+Must be in following format ssh://git@[bitbucket-hostname]:[bitbucket-ssh-port-number]/%s/%s.git.
+
+Example ssh://git@bitbucket.mobilesolutionworks.com:7999/%s/%s.git
+- `name` (String) Linked Bitbucket data center name
+- `server` (String) Linked Bitbucket data center UUID for linked repository and Bamboo Spec management.

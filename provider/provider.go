@@ -23,28 +23,48 @@ func (p *BambooProvider) Metadata(ctx context.Context, request provider.Metadata
 
 func (p *BambooProvider) Schema(ctx context.Context, request provider.SchemaRequest, response *provider.SchemaResponse) {
 	response.Schema = schema.Schema{
+		MarkdownDescription: `Bamboo provider.
+`,
 		Blocks: map[string]schema.Block{
 			"bamboo": schema.SingleNestedBlock{
+				MarkdownDescription: `Bamboo integration definition.`,
 				Attributes: map[string]schema.Attribute{
 					"endpoint": schema.StringAttribute{
-						Required: true,
+						Required:            true,
+						MarkdownDescription: `Bamboo end point url without trailing slash.`,
 					},
 					"token": schema.StringAttribute{
-						Required:  true,
-						Sensitive: true,
+						Required:            true,
+						Sensitive:           true,
+						MarkdownDescription: `Bamboo personal access token.`,
 					},
 				},
 			},
 			"bamboo_rss": schema.SingleNestedBlock{
+				MarkdownDescription: `Bamboo RSS definition.
+
+In order to get the value properly, you need to export your linked repository into local file system and retrieve the value from the exported YAML.
+
+See bamboo rest/api/1.0/export/repository/name/{name}. 
+
+Export configuration of a linked repository to YAML format
+`,
 				Attributes: map[string]schema.Attribute{
 					"server": schema.StringAttribute{
-						Required: true,
+						Required:            true,
+						MarkdownDescription: `Linked Bitbucket data center UUID for linked repository and Bamboo Spec management.`,
 					},
 					"name": schema.StringAttribute{
-						Required: true,
+						Required:            true,
+						MarkdownDescription: `Linked Bitbucket data center name`,
 					},
 					"clone_url": schema.StringAttribute{
 						Required: true,
+						MarkdownDescription: `Clone URL of the Bitbucket data center.
+
+Must be in following format ssh://git@[bitbucket-hostname]:[bitbucket-ssh-port-number]/%s/%s.git.
+
+Example ssh://git@bitbucket.mobilesolutionworks.com:7999/%s/%s.git`,
 					},
 				},
 			},
