@@ -3,12 +3,12 @@
 page_title: "bamboo_agent_assignment Resource - bamboo"
 subcategory: ""
 description: |-
-  
+  This resource define assignment of executable (project, plan, job, deployment, environment) to a Bamboo agent.
 ---
 
 # bamboo_agent_assignment (Resource)
 
-
+This resource define assignment of executable (project, plan, job, deployment, environment) to a Bamboo agent.
 
 
 
@@ -17,14 +17,14 @@ description: |-
 
 ### Required
 
-- `agent` (Number)
-- `executable_type` (String)
-- `type` (String)
+- `agent` (Number) Numeric id of the agent.
+- `executable_type` (String) Executable type.
+- `type` (String) Agent type (AGENT, IMAGE - elastic EC2 agent, EPHEMERAL - K8S agent).
 
 ### Optional
 
-- `executable_id` (Number)
+- `executable_id` (Number) Numeric id of the executable. As per current only deployment project is usable as i dont have data source for other type yet.
 
 ### Read-Only
 
-- `id` (Number) The ID of this resource.
+- `id` (Number) Numeric id of the assignment.

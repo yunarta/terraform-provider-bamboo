@@ -3,12 +3,18 @@
 page_title: "bamboo_project_linked_repository Resource - bamboo"
 subcategory: ""
 description: |-
-  
+  This resource define project level linked repository.
+  One of the main focus of this resource is the permission management, which usually overlooked when creating linked repository through GUI.
+  The priority block has a priority that defines the final assigned permissions of the user or group.
 ---
 
 # bamboo_project_linked_repository (Resource)
 
+This resource define project level linked repository.
 
+One of the main focus of this resource is the permission management, which usually overlooked when creating linked repository through GUI.
+
+The priority block has a priority that defines the final assigned permissions of the user or group.
 
 
 
@@ -17,35 +23,35 @@ description: |-
 
 ### Required
 
-- `name` (String)
-- `owner` (String)
-- `project` (String)
-- `slug` (String)
+- `key` (String) Bamboo project key that owns this linked repository.
+- `name` (String) Name of the linked repository.
+- `project` (String) Bitbucket project key that owns the Git repository.
+- `slug` (String) Bitbucket repository slug.
 
 ### Optional
 
-- `assignment_version` (String)
-- `assignments` (Block List) (see [below for nested schema](#nestedblock--assignments))
-- `rss_enabled` (Boolean)
+- `assignment_version` (String) Assignment version, used to force update the permission.
+- `assignments` (Block List) Assignment block (see [below for nested schema](#nestedblock--assignments))
+- `rss_enabled` (Boolean) Flag to modify Bamboo Spec flag after creation.
 
 ### Read-Only
 
-- `computed_groups` (Attributes List) (see [below for nested schema](#nestedatt--computed_groups))
-- `computed_users` (Attributes List) (see [below for nested schema](#nestedatt--computed_users))
-- `id` (String) The ID of this resource.
+- `computed_groups` (Attributes List) Computed assignment. (see [below for nested schema](#nestedatt--computed_groups))
+- `computed_users` (Attributes List) Computed assignment. (see [below for nested schema](#nestedatt--computed_users))
+- `id` (String) Numeric id of the linked repository.
 
 <a id="nestedblock--assignments"></a>
 ### Nested Schema for `assignments`
 
 Required:
 
-- `permissions` (List of String)
-- `priority` (Number)
+- `permissions` (List of String) List of permissions assignable to the users and groups (READ, ADMINISTRATION)
+- `priority` (Number) Priority of this block
 
 Optional:
 
-- `groups` (List of String)
-- `users` (List of String)
+- `groups` (List of String) List of group names.
+- `users` (List of String) List of usernames.
 
 
 <a id="nestedatt--computed_groups"></a>
@@ -53,8 +59,8 @@ Optional:
 
 Read-Only:
 
-- `name` (String)
-- `permissions` (List of String)
+- `name` (String) Name of the entity in the assignment.
+- `permissions` (List of String) List of permission owned by the entity in the assignment.
 
 
 <a id="nestedatt--computed_users"></a>
@@ -62,5 +68,5 @@ Read-Only:
 
 Read-Only:
 
-- `name` (String)
-- `permissions` (List of String)
+- `name` (String) Name of the entity in the assignment.
+- `permissions` (List of String) List of permission owned by the entity in the assignment.
