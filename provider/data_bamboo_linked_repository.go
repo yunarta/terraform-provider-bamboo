@@ -50,12 +50,15 @@ func (receiver *LinkedRepositoryDataSource) Metadata(ctx context.Context, reques
 
 func (receiver *LinkedRepositoryDataSource) Schema(ctx context.Context, request datasource.SchemaRequest, response *datasource.SchemaResponse) {
 	response.Schema = schema.Schema{
+		MarkdownDescription: "This data source used define a lookup of linked repository by name.",
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{
-				Computed: true,
+				Computed:            true,
+				MarkdownDescription: "Computed linked repository id.",
 			},
 			"name": schema.StringAttribute{
-				Required: true,
+				Required:            true,
+				MarkdownDescription: "Linked repository name.",
 			},
 		},
 	}

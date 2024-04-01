@@ -3,12 +3,12 @@
 page_title: "bamboo_project Data Source - bamboo"
 subcategory: ""
 description: |-
-  
+  This data source define a lookup of project permissions
 ---
 
 # bamboo_project (Data Source)
 
-
+This data source define a lookup of project permissions
 
 
 
@@ -17,9 +17,9 @@ description: |-
 
 ### Required
 
-- `key` (String)
+- `key` (String) Project key.
 
 ### Read-Only
 
-- `groups` (Map of List of String)
-- `users` (Map of List of String)
+- `groups` (Map of List of String) A map with the permission as the key and list of groups as the value.
+- `users` (Map of List of String) A map with the permission as the key and list of users as the value.

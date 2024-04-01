@@ -50,21 +50,27 @@ func (receiver *ProjectRepositoriesResource) Metadata(ctx context.Context, reque
 
 func (receiver *ProjectRepositoriesResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	response.Schema = schema.Schema{
+		MarkdownDescription: `This resource define project repository spec permissions.
+
+In order for the execution to be successful, the user must have user access to all the specified repositories.`,
 		Attributes: map[string]schema.Attribute{
 			"retain_on_delete": schema.BoolAttribute{
-				Optional: true,
-				Computed: true,
-				Default:  booldefault.StaticBool(true),
+				Optional:            true,
+				Computed:            true,
+				Default:             booldefault.StaticBool(true),
+				MarkdownDescription: "Default value is `true`, and if the value set to `false` when the resource destroyed, the permission will be removed.",
 			},
 			"key": schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
+				MarkdownDescription: "Project key where the variable will be added",
 			},
 			"repositories": schema.ListAttribute{
-				Required:    true,
-				ElementType: types.StringType,
+				Required:            true,
+				ElementType:         types.StringType,
+				MarkdownDescription: "This project will add this list of linked repositories into its permission.",
 			},
 		},
 	}

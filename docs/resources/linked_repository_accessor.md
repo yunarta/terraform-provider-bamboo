@@ -3,14 +3,15 @@
 page_title: "bamboo_linked_repository_accessor Resource - bamboo"
 subcategory: ""
 description: |-
-  Repository accessor define relationship that allow other repositories to access this repository.
-                        It only add and remove repositories listed in its properties
+  This resource define relationship that allow other repositories to use this repository.
+  In order for the execution to be successful, the user must have user access to all the specified repositories.
 ---
 
 # bamboo_linked_repository_accessor (Resource)
 
-Repository accessor define relationship that allow other repositories to access this repository.
-					  It only add and remove repositories listed in its properties
+This resource define relationship that allow other repositories to use this repository.
+
+In order for the execution to be successful, the user must have user access to all the specified repositories.
 
 
 
@@ -19,12 +20,9 @@ Repository accessor define relationship that allow other repositories to access 
 
 ### Required
 
-- `repositories` (List of String)
+- `id` (String) Numeric id of the linked repository.
+- `repositories` (List of String) This repository will add this list of linked repositories into its permission.
 
 ### Optional
 
-- `retain_on_delete` (Boolean)
-
-### Read-Only
-
-- `id` (String) The ID of this resource.
+- `retain_on_delete` (Boolean) Default value is `true`, and if the value set to `false` when the resource destroyed, the permission will be removed.

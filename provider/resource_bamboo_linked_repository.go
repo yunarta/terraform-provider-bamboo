@@ -48,27 +48,38 @@ func (receiver *LinkedRepositoryResource) Metadata(ctx context.Context, request 
 
 func (receiver *LinkedRepositoryResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	response.Schema = schema.Schema{
+		MarkdownDescription: `This resource define system level linked repository.
+
+One of the main focus of this resource is the permission management, which usually overlooked when creating linked repository through GUI.
+
+The priority block has a priority that defines the final assigned permissions of the user or group.`,
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{
-				Computed: true,
+				Computed:            true,
+				MarkdownDescription: "Numeric id of the linked repository.",
 			},
 			"name": schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplaceIf(linkedRepositoryNameCheck, "", ""),
 				},
+				MarkdownDescription: "Name of the linked repository.",
 			},
 			"rss_enabled": schema.BoolAttribute{
-				Optional: true,
+				Optional:            true,
+				MarkdownDescription: "Flag to modify Bamboo Spec flag after creation.",
 			},
 			"project": schema.StringAttribute{
-				Required: true,
+				Required:            true,
+				MarkdownDescription: "Bitbucket project key that owns the Git repository.",
 			},
 			"slug": schema.StringAttribute{
-				Required: true,
+				Required:            true,
+				MarkdownDescription: "Bitbucket repository slug.",
 			},
 			"assignment_version": schema.StringAttribute{
-				Optional: true,
+				Optional:            true,
+				MarkdownDescription: "Assignment version, used to force update the permission.",
 			},
 			"computed_users":  ComputedAssignmentSchema,
 			"computed_groups": ComputedAssignmentSchema,

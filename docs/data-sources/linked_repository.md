@@ -3,12 +3,12 @@
 page_title: "bamboo_linked_repository Data Source - bamboo"
 subcategory: ""
 description: |-
-  
+  This data source used define a lookup of linked repository by name.
 ---
 
 # bamboo_linked_repository (Data Source)
 
-
+This data source used define a lookup of linked repository by name.
 
 
 
@@ -17,8 +17,8 @@ description: |-
 
 ### Required
 
-- `name` (String)
+- `name` (String) Linked repository name.
 
 ### Read-Only
 
-- `id` (String) The ID of this resource.
+- `id` (String) Computed linked repository id.

@@ -3,12 +3,15 @@
 page_title: "bamboo_project_permissions Resource - bamboo"
 subcategory: ""
 description: |-
-  
+  This resource define project user and groups project and plan permissions.
+  The priority block has a priority that defines the final assigned permissions of the user or group.
 ---
 
 # bamboo_project_permissions (Resource)
 
+This resource define project user and groups project and plan permissions.
 
+The priority block has a priority that defines the final assigned permissions of the user or group.
 
 
 
@@ -17,31 +20,31 @@ description: |-
 
 ### Required
 
-- `key` (String)
+- `key` (String) Project key where the permissions will be added.
 
 ### Optional
 
-- `assignment_version` (String)
-- `assignments` (Block List) (see [below for nested schema](#nestedblock--assignments))
-- `retain_on_delete` (Boolean)
+- `assignment_version` (String) Assignment version, used to force update the permission.
+- `assignments` (Block List) Assignment block (see [below for nested schema](#nestedblock--assignments))
+- `retain_on_delete` (Boolean) Default value is `true`, and if the value set to `false` when the resource destroyed, the permission will be removed.
 
 ### Read-Only
 
-- `computed_groups` (Attributes List) (see [below for nested schema](#nestedatt--computed_groups))
-- `computed_users` (Attributes List) (see [below for nested schema](#nestedatt--computed_users))
+- `computed_groups` (Attributes List) Computed assignment. (see [below for nested schema](#nestedatt--computed_groups))
+- `computed_users` (Attributes List) Computed assignment. (see [below for nested schema](#nestedatt--computed_users))
 
 <a id="nestedblock--assignments"></a>
 ### Nested Schema for `assignments`
 
 Required:
 
-- `permissions` (List of String)
-- `priority` (Number)
+- `permissions` (List of String) List of permissions assignable to the users and groups (READ, VIEWCONFIGURATION, WRITE, BUILD, CLONE, CREATE, CREATEREPOSITORY, ADMINISTRATION)
+- `priority` (Number) Priority of this block
 
 Optional:
 
-- `groups` (List of String)
-- `users` (List of String)
+- `groups` (List of String) List of group names.
+- `users` (List of String) List of usernames.
 
 
 <a id="nestedatt--computed_groups"></a>
@@ -49,8 +52,8 @@ Optional:
 
 Read-Only:
 
-- `name` (String)
-- `permissions` (List of String)
+- `name` (String) Name of the entity in the assignment.
+- `permissions` (List of String) List of permission owned by the entity in the assignment.
 
 
 <a id="nestedatt--computed_users"></a>
@@ -58,5 +61,5 @@ Read-Only:
 
 Read-Only:
 
-- `name` (String)
-- `permissions` (List of String)
+- `name` (String) Name of the entity in the assignment.
+- `permissions` (List of String) List of permission owned by the entity in the assignment.

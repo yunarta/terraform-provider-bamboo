@@ -13,7 +13,7 @@ type ProjectLinkedRepositoryModel struct {
 	Name       types.String `tfsdk:"name"`
 	RssEnabled types.Bool   `tfsdk:"rss_enabled"`
 
-	Owner   types.String `tfsdk:"owner"`
+	Key     types.String `tfsdk:"key"`
 	Project types.String `tfsdk:"project"`
 	Slug    types.String `tfsdk:"slug"`
 
@@ -40,7 +40,7 @@ func (d ProjectLinkedRepositoryModel) getLinkedRepositoryId(ctx context.Context)
 func NewProjectLinkedRepositoryModel(plan ProjectLinkedRepositoryModel, repositoryId int, assignmentResult *AssignmentResult) *ProjectLinkedRepositoryModel {
 	return &ProjectLinkedRepositoryModel{
 		ID:                types.StringValue(fmt.Sprintf("%v", repositoryId)),
-		Owner:             plan.Owner,
+		Key:               plan.Key,
 		Name:              plan.Name,
 		RssEnabled:        plan.RssEnabled,
 		Project:           plan.Project,

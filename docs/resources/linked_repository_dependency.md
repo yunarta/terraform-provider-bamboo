@@ -3,12 +3,15 @@
 page_title: "bamboo_linked_repository_dependency Resource - bamboo"
 subcategory: ""
 description: |-
-  Repository requires define relationship where this repository requires access to list of repositories
+  This resource define relationship where repository specified by id will requires access to list of specified required repositories.
+  In order for the execution to be successful, the user must have admin access to all the required repositories.
 ---
 
 # bamboo_linked_repository_dependency (Resource)
 
-Repository requires define relationship where this repository requires access to list of repositories
+This resource define relationship where repository specified by id will requires access to list of specified required repositories.
+
+In order for the execution to be successful, the user must have admin access to all the required repositories.
 
 
 
@@ -17,12 +20,9 @@ Repository requires define relationship where this repository requires access to
 
 ### Required
 
-- `requires` (List of String)
+- `id` (String) Numeric id of the linked repository.
+- `requires` (List of String) This repository will be added into to this list of linked repositories permissions.
 
 ### Optional
 
-- `retain_on_delete` (Boolean)
-
-### Read-Only
-
-- `id` (String) The ID of this resource.
+- `retain_on_delete` (Boolean) Default value is `true`, and if the value set to `false` when the resource destroyed, the permission will be removed.

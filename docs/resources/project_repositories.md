@@ -3,12 +3,15 @@
 page_title: "bamboo_project_repositories Resource - bamboo"
 subcategory: ""
 description: |-
-  
+  This resource define project repository spec permissions.
+  In order for the execution to be successful, the user must have user access to all the specified repositories.
 ---
 
 # bamboo_project_repositories (Resource)
 
+This resource define project repository spec permissions.
 
+In order for the execution to be successful, the user must have user access to all the specified repositories.
 
 
 
@@ -17,9 +20,9 @@ description: |-
 
 ### Required
 
-- `key` (String)
-- `repositories` (List of String)
+- `key` (String) Project key where the variable will be added
+- `repositories` (List of String) This project will add this list of linked repositories into its permission.
 
 ### Optional
 
-- `retain_on_delete` (Boolean)
+- `retain_on_delete` (Boolean) Default value is `true`, and if the value set to `false` when the resource destroyed, the permission will be removed.

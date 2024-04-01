@@ -3,12 +3,15 @@
 page_title: "bamboo_deployment_repositories Resource - bamboo"
 subcategory: ""
 description: |-
-  
+  This resource define deployment repository spec permissions.
+  In order for the execution to be successful, the user must have user access to all the specified repositories.
 ---
 
 # bamboo_deployment_repositories (Resource)
 
+This resource define deployment repository spec permissions.
 
+In order for the execution to be successful, the user must have user access to all the specified repositories.
 
 
 
@@ -17,12 +20,9 @@ description: |-
 
 ### Required
 
-- `repositories` (List of String)
+- `id` (String) Numeric id of the deployment.
+- `repositories` (List of String) This deployment will add this list of linked repositories into its permission.
 
 ### Optional
 
-- `retain_on_delete` (Boolean)
-
-### Read-Only
-
-- `id` (String) The ID of this resource.
+- `retain_on_delete` (Boolean) Default value is `true`, and if the value set to `false` when the resource destroyed, the permission will be removed.

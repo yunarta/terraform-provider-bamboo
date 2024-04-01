@@ -3,12 +3,12 @@
 page_title: "bamboo_project_variable Resource - bamboo"
 subcategory: ""
 description: |-
-  
+  This resource define project variables.
 ---
 
 # bamboo_project_variable (Resource)
 
-
+This resource define project variables.
 
 
 
@@ -17,10 +17,10 @@ description: |-
 
 ### Required
 
-- `name` (String)
-- `project` (String)
+- `key` (String) Project key where the variable will be added
+- `name` (String) Name of the variable
 
 ### Optional
 
-- `secret` (String, Sensitive)
-- `value` (String)
+- `secret` (String, Sensitive) Sensitive value of the variable. It will be masked during operation
+- `value` (String) Value of the variable
