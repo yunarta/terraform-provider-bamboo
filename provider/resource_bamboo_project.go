@@ -46,28 +46,36 @@ func (receiver *ProjectResource) Metadata(ctx context.Context, request resource.
 
 func (receiver *ProjectResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	response.Schema = schema.Schema{
+		MarkdownDescription: `This resource define project.
+
+The priority block has a priority that defines the final assigned permissions of the user or group.`,
 		Attributes: map[string]schema.Attribute{
 			"retain_on_delete": schema.BoolAttribute{
-				Optional: true,
-				Computed: true,
-				Default:  booldefault.StaticBool(true),
+				Optional:            true,
+				Computed:            true,
+				Default:             booldefault.StaticBool(true),
+				MarkdownDescription: "Default value is `true`, and if the value set to `false` when the resource destroyed, the project will be removed.",
 			},
 			"key": schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
+				MarkdownDescription: "Project key.",
 			},
 			"name": schema.StringAttribute{
-				Required: true,
+				Required:            true,
+				MarkdownDescription: "Project name.",
 			},
 			"description": schema.StringAttribute{
-				Computed: true,
-				Optional: true,
-				Default:  stringdefault.StaticString(""),
+				Computed:            true,
+				Optional:            true,
+				Default:             stringdefault.StaticString(""),
+				MarkdownDescription: "Project description.",
 			},
 			"assignment_version": schema.StringAttribute{
-				Optional: true,
+				Optional:            true,
+				MarkdownDescription: "Assignment version, used to force update the permission.",
 			},
 			"computed_users":  ComputedAssignmentSchema,
 			"computed_groups": ComputedAssignmentSchema,

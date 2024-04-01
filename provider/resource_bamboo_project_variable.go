@@ -46,25 +46,31 @@ func (receiver *ProjectVariableResource) Metadata(ctx context.Context, request r
 
 func (receiver *ProjectVariableResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	response.Schema = schema.Schema{
+		MarkdownDescription: `This resource define project variables.
+`,
 		Attributes: map[string]schema.Attribute{
-			"project": schema.StringAttribute{
+			"key": schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
+				MarkdownDescription: "Project key where the variable will be added",
 			},
 			"name": schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
+				MarkdownDescription: "Name of the variable",
 			},
 			"value": schema.StringAttribute{
-				Optional: true,
+				Optional:            true,
+				MarkdownDescription: "Value of the variable",
 			},
 			"secret": schema.StringAttribute{
-				Optional:  true,
-				Sensitive: true,
+				Optional:            true,
+				Sensitive:           true,
+				MarkdownDescription: "Sensitive value of the variable. It will be masked during operation",
 			},
 		},
 	}
@@ -94,7 +100,7 @@ func (receiver *ProjectVariableResource) Create(ctx context.Context, request res
 	}
 
 	err := receiver.client.ProjectService().PutVariables(
-		plan.Project.ValueString(),
+		plan.Key.ValueString(),
 		plan.Name.ValueString(),
 		value,
 	)
@@ -121,7 +127,7 @@ func (receiver *ProjectVariableResource) Read(ctx context.Context, request resou
 		return
 	}
 
-	value, err := receiver.client.ProjectService().GetVariables(state.Project.ValueString(), state.Name.ValueString())
+	value, err := receiver.client.ProjectService().GetVariables(state.Key.ValueString(), state.Name.ValueString())
 	if util.TestError(&response.Diagnostics, err, "Failed to create project") {
 		return
 	}
@@ -135,10 +141,10 @@ func (receiver *ProjectVariableResource) Read(ctx context.Context, request resou
 	}
 
 	diags = response.State.Set(ctx, ProjectVariableModel{
-		Project: state.Project,
-		Name:    state.Name,
-		Value:   util.NullString(value),
-		Secret:  state.Secret,
+		Key:    state.Key,
+		Name:   state.Name,
+		Value:  util.NullString(value),
+		Secret: state.Secret,
 	})
 	if util.TestDiagnostic(&response.Diagnostics, diags) {
 		return
@@ -170,7 +176,7 @@ func (receiver *ProjectVariableResource) Update(ctx context.Context, request res
 	}
 
 	err := receiver.client.ProjectService().PutVariables(
-		plan.Project.ValueString(),
+		plan.Key.ValueString(),
 		plan.Name.ValueString(),
 		value,
 	)
@@ -196,7 +202,7 @@ func (receiver *ProjectVariableResource) Delete(ctx context.Context, request res
 	}
 
 	err := receiver.client.ProjectService().DeleteVariables(
-		state.Project.ValueString(),
+		state.Key.ValueString(),
 		state.Name.ValueString(),
 	)
 	if util.TestError(&response.Diagnostics, err, "Failed to delete project variable") {
@@ -209,8 +215,8 @@ func (receiver *ProjectVariableResource) Delete(ctx context.Context, request res
 func (receiver *ProjectVariableResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
 	tokens := strings.Split(request.ID, "/")
 	diags := response.State.Set(ctx, &ProjectVariableModel{
-		Project: types.StringValue(tokens[0]),
-		Name:    types.StringValue(tokens[1]),
+		Key:  types.StringValue(tokens[0]),
+		Name: types.StringValue(tokens[1]),
 	})
 	if util.TestDiagnostic(&response.Diagnostics, diags) {
 		return

@@ -55,29 +55,38 @@ func (receiver *DeploymentResource) Metadata(ctx context.Context, request resour
 
 func (receiver *DeploymentResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	response.Schema = schema.Schema{
+		MarkdownDescription: `This resource define deployment.
+
+In order for the execution to be successful, the user must have user access to all the specified repositories.`,
 		Attributes: map[string]schema.Attribute{
 			"retain_on_delete": schema.BoolAttribute{
-				Optional: true,
-				Computed: true,
-				Default:  booldefault.StaticBool(true),
+				Optional:            true,
+				Computed:            true,
+				Default:             booldefault.StaticBool(true),
+				MarkdownDescription: "Default value is `true`, and if the value set to `false` when the resource destroyed, the deployment will be removed.",
 			},
 			"id": schema.StringAttribute{
-				Computed: true,
+				Computed:            true,
+				MarkdownDescription: "Numeric id of the deployment.",
 			},
 			"name": schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
+				MarkdownDescription: "Name of the deployment.",
 			},
 			"plan_key": schema.StringAttribute{
-				Required: true,
+				Required:            true,
+				MarkdownDescription: "Plan key that will be the source of the deployment.",
 			},
 			"description": schema.StringAttribute{
-				Optional: true,
+				Optional:            true,
+				MarkdownDescription: "Description the deployment.",
 			},
 			"repository_specs_managed": schema.BoolAttribute{
-				Computed: true,
+				Computed:            true,
+				MarkdownDescription: "Computer value that defines the repository is managed by spec.",
 			},
 			"repositories": schema.ListAttribute{
 				Optional:    true,
@@ -88,9 +97,11 @@ func (receiver *DeploymentResource) Schema(ctx context.Context, request resource
 						"value must be a numeric",
 					)),
 				},
+				MarkdownDescription: "This deployment will add this list of linked repositories into its permission.",
 			},
 			"assignment_version": schema.StringAttribute{
-				Optional: true,
+				Optional:            true,
+				MarkdownDescription: "Assignment version, used to force update the permission.",
 			},
 			"computed_users":  ComputedAssignmentSchema,
 			"computed_groups": ComputedAssignmentSchema,

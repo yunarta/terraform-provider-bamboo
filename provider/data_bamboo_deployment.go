@@ -48,24 +48,29 @@ func (receiver *DeploymentDataSource) Metadata(ctx context.Context, request data
 
 func (receiver *DeploymentDataSource) Schema(ctx context.Context, request datasource.SchemaRequest, response *datasource.SchemaResponse) {
 	response.Schema = schema.Schema{
+		MarkdownDescription: "This data source used define a lookup of deployment project by name.",
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{
-				Computed: true,
+				Computed:            true,
+				MarkdownDescription: "Computed deployment id.",
 			},
 			"name": schema.StringAttribute{
-				Required: true,
+				Required:            true,
+				MarkdownDescription: "Deployment project name.",
 			},
 			"users": schema.MapAttribute{
 				Computed: true,
 				ElementType: types.ListType{
 					ElemType: types.StringType,
 				},
+				MarkdownDescription: "A map with the permission as the key and list of users as the value.",
 			},
 			"groups": schema.MapAttribute{
 				Computed: true,
 				ElementType: types.ListType{
 					ElemType: types.StringType,
 				},
+				MarkdownDescription: "A map with the permission as the key and list of groups as the value.",
 			},
 		},
 	}

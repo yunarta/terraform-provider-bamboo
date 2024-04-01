@@ -51,15 +51,20 @@ func (receiver *LinkedRepositoryDependencyResource) Metadata(ctx context.Context
 
 func (receiver *LinkedRepositoryDependencyResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	response.Schema = schema.Schema{
-		Description: "Repository requires define relationship where this repository requires access to list of repositories",
+		MarkdownDescription: `This resource define relationship where repository specified by id will requires access to list of specified required repositories.
+
+In order for the execution to be successful, the user must have admin access to all the required repositories. 
+`,
 		Attributes: map[string]schema.Attribute{
 			"retain_on_delete": schema.BoolAttribute{
-				Optional: true,
-				Computed: true,
-				Default:  booldefault.StaticBool(true),
+				Optional:            true,
+				Computed:            true,
+				Default:             booldefault.StaticBool(true),
+				MarkdownDescription: "Default value is `true`, and if the value set to `false` when the resource destroyed, the permission will be removed.",
 			},
 			"id": schema.StringAttribute{
-				Required: true,
+				Required:            true,
+				MarkdownDescription: "Numeric id of the linked repository.",
 			},
 			"requires": schema.ListAttribute{
 				Required:    true,
@@ -70,6 +75,7 @@ func (receiver *LinkedRepositoryDependencyResource) Schema(ctx context.Context, 
 						"value must be a numeric",
 					)),
 				},
+				MarkdownDescription: "This repository will be added into to this list of linked repositories permissions.",
 			},
 		},
 	}

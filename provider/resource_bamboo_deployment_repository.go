@@ -49,18 +49,24 @@ func (receiver *DeploymentRepositoriesResource) Metadata(ctx context.Context, re
 
 func (receiver *DeploymentRepositoriesResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	response.Schema = schema.Schema{
+		MarkdownDescription: `This resource define deployment repository spec permissions.
+
+In order for the execution to be successful, the user must have user access to all the specified repositories.`,
 		Attributes: map[string]schema.Attribute{
 			"retain_on_delete": schema.BoolAttribute{
-				Optional: true,
-				Computed: true,
-				Default:  booldefault.StaticBool(true),
+				Optional:            true,
+				Computed:            true,
+				Default:             booldefault.StaticBool(true),
+				MarkdownDescription: "Default value is `true`, and if the value set to `false` when the resource destroyed, the permission will be removed.",
 			},
 			"id": schema.StringAttribute{
-				Required: true,
+				Required:            true,
+				MarkdownDescription: "Numeric id of the deployment.",
 			},
 			"repositories": schema.ListAttribute{
-				Required:    true,
-				ElementType: types.StringType,
+				Required:            true,
+				ElementType:         types.StringType,
+				MarkdownDescription: "This deployment will add this list of linked repositories into its permission.",
 			},
 		},
 	}

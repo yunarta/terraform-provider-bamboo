@@ -3,15 +3,19 @@ package provider
 import (
 	"context"
 	"fmt"
+	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/yunarta/golang-quality-of-life-pack/collections"
 	"github.com/yunarta/terraform-atlassian-api-client/bamboo"
 	"github.com/yunarta/terraform-provider-commons/util"
+	"regexp"
 	"sort"
 	"strconv"
 )
@@ -49,20 +53,30 @@ func (receiver *LinkedRepositoryAccessorResource) Metadata(ctx context.Context, 
 
 func (receiver *LinkedRepositoryAccessorResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	response.Schema = schema.Schema{
-		Description: `Repository accessor define relationship that allow other repositories to access this repository.
-					  It only add and remove repositories listed in its properties`,
+		MarkdownDescription: `This resource define relationship that allow other repositories to use this repository.
+
+In order for the execution to be successful, the user must have user access to all the specified repositories.`,
 		Attributes: map[string]schema.Attribute{
 			"retain_on_delete": schema.BoolAttribute{
-				Optional: true,
-				Computed: true,
-				Default:  booldefault.StaticBool(true),
+				Optional:            true,
+				Computed:            true,
+				Default:             booldefault.StaticBool(true),
+				MarkdownDescription: "Default value is `true`, and if the value set to `false` when the resource destroyed, the permission will be removed.",
 			},
 			"id": schema.StringAttribute{
-				Required: true,
+				Required:            true,
+				MarkdownDescription: "Numeric id of the linked repository.",
 			},
 			"repositories": schema.ListAttribute{
 				Required:    true,
 				ElementType: types.StringType,
+				Validators: []validator.List{
+					listvalidator.ValueStringsAre(stringvalidator.RegexMatches(
+						regexp.MustCompile(`^\d+$`),
+						"value must be a numeric",
+					)),
+				},
+				MarkdownDescription: "This repository will add this list of linked repositories into its permission.",
 			},
 		},
 	}

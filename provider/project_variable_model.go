@@ -5,10 +5,10 @@ import (
 )
 
 type ProjectVariableModel struct {
-	Project types.String `tfsdk:"project"`
-	Name    types.String `tfsdk:"name"`
-	Value   types.String `tfsdk:"value"`
-	Secret  types.String `tfsdk:"secret"`
+	Key    types.String `tfsdk:"key"`
+	Name   types.String `tfsdk:"name"`
+	Value  types.String `tfsdk:"value"`
+	Secret types.String `tfsdk:"secret"`
 }
 
 //func NewProjectVariableModel(plan ProjectVariableModel, project *bamboo.Project, assignmentResult *AssignmentResult) *ProjectVariableModel {

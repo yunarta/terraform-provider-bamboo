@@ -45,15 +45,19 @@ func (receiver *AgentAssignmentResource) Metadata(ctx context.Context, request r
 
 func (receiver *AgentAssignmentResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	response.Schema = schema.Schema{
+		MarkdownDescription: `This resource define assignment of executable (project, plan, job, deployment, environment) to a Bamboo agent.
+`,
 		Attributes: map[string]schema.Attribute{
 			"id": schema.Int64Attribute{
-				Computed: true,
+				Computed:            true,
+				MarkdownDescription: "Numeric id of the assignment.",
 			},
 			"agent": schema.Int64Attribute{
 				Required: true,
 				PlanModifiers: []planmodifier.Int64{
 					int64planmodifier.RequiresReplaceIfConfigured(),
 				},
+				MarkdownDescription: "Numeric id of the agent.",
 			},
 			"type": schema.StringAttribute{
 				Required: true,
@@ -63,28 +67,25 @@ func (receiver *AgentAssignmentResource) Schema(ctx context.Context, request res
 				Validators: []validator.String{
 					stringvalidator.OneOf("AGENT", "IMAGE", "EPHEMERAL"),
 				},
+				MarkdownDescription: "Agent type (AGENT, IMAGE - elastic EC2 agent, EPHEMERAL - K8S agent).",
 			},
 			"executable_id": schema.Int64Attribute{
 				Optional: true,
 				PlanModifiers: []planmodifier.Int64{
 					int64planmodifier.RequiresReplaceIfConfigured(),
 				},
+				MarkdownDescription: "Numeric id of the executable. As per current only deployment project is usable as i dont have data source for other type yet.",
 			},
-			//"executable_name": schema.StringAttribute{
-			//	Optional: true,
-			//	PlanModifiers: []planmodifier.String{
-			//		stringplanmodifier.RequiresReplaceIfConfigured(),
-			//	},
-			//},
 			"executable_type": schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Validators: []validator.String{
-					stringvalidator.OneOf("DEPLOYMENT_PROJECT"),
-					//stringvalidator.OneOf("PROJECT", "PLAN", "JOB", "DEPLOYMENT_PROJECT", "ENVIRONMENT"),
+					//stringvalidator.OneOf("DEPLOYMENT_PROJECT"),
+					stringvalidator.OneOf("PROJECT", "PLAN", "JOB", "DEPLOYMENT_PROJECT", "ENVIRONMENT"),
 				},
+				MarkdownDescription: "Executable type.",
 			},
 		},
 	}

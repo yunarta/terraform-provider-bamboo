@@ -46,21 +46,25 @@ func (receiver *ProjectPermissionsDataSource) Metadata(ctx context.Context, requ
 
 func (receiver *ProjectPermissionsDataSource) Schema(ctx context.Context, request datasource.SchemaRequest, response *datasource.SchemaResponse) {
 	response.Schema = schema.Schema{
+		MarkdownDescription: `This data source define a lookup of project permissions`,
 		Attributes: map[string]schema.Attribute{
 			"key": schema.StringAttribute{
-				Required: true,
+				Required:            true,
+				MarkdownDescription: "Project key.",
 			},
 			"users": schema.MapAttribute{
 				Computed: true,
 				ElementType: types.ListType{
 					ElemType: types.StringType,
 				},
+				MarkdownDescription: "A map with the permission as the key and list of users as the value.",
 			},
 			"groups": schema.MapAttribute{
 				Computed: true,
 				ElementType: types.ListType{
 					ElemType: types.StringType,
 				},
+				MarkdownDescription: "A map with the permission as the key and list of groups as the value.",
 			},
 		},
 	}

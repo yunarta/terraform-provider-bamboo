@@ -2,6 +2,7 @@ package provider
 
 import (
 	"context"
+	"fmt"
 	"github.com/emirpasic/gods/utils"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
@@ -77,15 +78,18 @@ func (assignments Assignments) CreateAssignmentOrder(ctx context.Context) (*Assi
 
 func AssignmentSchema(permissions ...string) schema.ListNestedBlock {
 	return schema.ListNestedBlock{
+		MarkdownDescription: "Assignment block",
 		NestedObject: schema.NestedBlockObject{
 			Attributes: map[string]schema.Attribute{
 				"users": schema.ListAttribute{
-					Optional:    true,
-					ElementType: types.StringType,
+					Optional:            true,
+					ElementType:         types.StringType,
+					MarkdownDescription: "List of usernames.",
 				},
 				"groups": schema.ListAttribute{
-					Optional:    true,
-					ElementType: types.StringType,
+					Optional:            true,
+					ElementType:         types.StringType,
+					MarkdownDescription: "List of group names.",
 				},
 				"permissions": schema.ListAttribute{
 					Required:    true,
@@ -93,9 +97,11 @@ func AssignmentSchema(permissions ...string) schema.ListNestedBlock {
 					Validators: []validator.List{
 						listvalidator.ValueStringsAre(stringvalidator.OneOf(permissions...)),
 					},
+					MarkdownDescription: fmt.Sprintf("List of permissions assignable to the users and groups (%s)", strings.Join(permissions, ", ")),
 				},
 				"priority": schema.Int64Attribute{
-					Required: true,
+					Required:            true,
+					MarkdownDescription: "Priority of this block",
 				},
 			},
 		},
@@ -103,15 +109,18 @@ func AssignmentSchema(permissions ...string) schema.ListNestedBlock {
 }
 
 var ComputedAssignmentSchema = schema.ListNestedAttribute{
-	Computed: true,
+	Computed:            true,
+	MarkdownDescription: "Computed assignment.",
 	NestedObject: schema.NestedAttributeObject{
 		Attributes: map[string]schema.Attribute{
 			"name": schema.StringAttribute{
-				Computed: true,
+				Computed:            true,
+				MarkdownDescription: "Name of the entity in the assignment.",
 			},
 			"permissions": schema.ListAttribute{
-				Computed:    true,
-				ElementType: types.StringType,
+				Computed:            true,
+				ElementType:         types.StringType,
+				MarkdownDescription: "List of permission owned by the entity in the assignment.",
 			},
 		},
 	},
