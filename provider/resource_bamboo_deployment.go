@@ -219,6 +219,8 @@ func (receiver *DeploymentResource) Read(ctx context.Context, request resource.R
 		}
 	}
 
+	state.ID = types.StringValue(strconv.Itoa(deploymentId))
+
 	repositories, err := receiver.client.DeploymentService().GetSpecRepositories(deploymentId)
 	if util.TestError(&response.Diagnostics, err, "Failed to read deployment repositories") {
 		return
