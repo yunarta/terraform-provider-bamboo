@@ -108,13 +108,9 @@ In order for the execution to be successful, the user must have user access to a
 		},
 		Blocks: map[string]schema.Block{
 			"assignments": AssignmentSchema(
+				"APPROVERELEASE",
 				"READ",
-				"CREATE",
-				"CREATEREPOSITORY",
-				"ADMINISTRATION",
-				"CLONE",
 				"WRITE",
-				"BUILD",
 				"VIEWCONFIGURATION"),
 		},
 	}
@@ -202,11 +198,16 @@ func (receiver *DeploymentResource) Read(ctx context.Context, request resource.R
 
 	if state.ID.IsNull() {
 		deployment, err = receiver.client.DeploymentService().Read(state.Name.ValueString())
-		if util.TestError(&response.Diagnostics, err, errorProvidedDeploymentIdMustBeNumber) {
+		if util.TestError(&response.Diagnostics, err, errorFailedToReadDeployment) {
 			return
 		}
 
-		deploymentId = deployment.ID
+		if deployment != nil {
+			deploymentId = deployment.ID
+		} else {
+			response.Diagnostics.AddError("Unable to find deployment", fmt.Sprintf("no deployment with name %s", state.Name.ValueString()))
+			return
+		}
 	} else {
 		deploymentId, err = strconv.Atoi(state.ID.ValueString())
 		if util.TestError(&response.Diagnostics, err, errorProvidedDeploymentIdMustBeNumber) {
@@ -218,6 +219,8 @@ func (receiver *DeploymentResource) Read(ctx context.Context, request resource.R
 			return
 		}
 	}
+
+	state.ID = types.StringValue(strconv.Itoa(deploymentId))
 
 	repositories, err := receiver.client.DeploymentService().GetSpecRepositories(deploymentId)
 	if util.TestError(&response.Diagnostics, err, "Failed to read deployment repositories") {
