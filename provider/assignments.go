@@ -133,8 +133,10 @@ type ComputedAssignment struct {
 
 var assignmentType = types.ObjectType{
 	AttrTypes: map[string]attr.Type{
-		"permission": types.StringType,
-		"priority":   types.NumberType,
+		"permissions": types.ListType{
+			ElemType: types.StringType,
+		},
+		"priority": types.NumberType,
 		"users": types.ListType{
 			ElemType: types.StringType,
 		},
