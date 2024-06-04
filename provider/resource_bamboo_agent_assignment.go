@@ -48,10 +48,10 @@ func (receiver *AgentAssignmentResource) Schema(ctx context.Context, request res
 		MarkdownDescription: `This resource define assignment of executable (project, plan, job, deployment, environment) to a Bamboo agent.
 `,
 		Attributes: map[string]schema.Attribute{
-			"id": schema.Int64Attribute{
-				Computed:            true,
-				MarkdownDescription: "Numeric id of the assignment.",
-			},
+			//"id": schema.StringAttribute{
+			//	Computed:            true,
+			//	MarkdownDescription: "Id of the assignment.",
+			//},
 			"agent": schema.Int64Attribute{
 				Required: true,
 				PlanModifiers: []planmodifier.Int64{
