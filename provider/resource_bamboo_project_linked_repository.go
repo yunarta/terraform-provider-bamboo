@@ -311,5 +311,20 @@ func (receiver *ProjectLinkedRepositoryResource) Delete(ctx context.Context, req
 }
 
 func (receiver *ProjectLinkedRepositoryResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("name"), request, response)
+	slug := strings.Split(request.ID, "/")
+	diags := response.State.Set(ctx, &ProjectLinkedRepositoryModel{
+		Key:               types.StringValue(slug[0]),
+		Name:              types.StringValue(slug[1]),
+		RssEnabled:        types.BoolNull(),
+		Project:           types.StringNull(),
+		Slug:              types.StringNull(),
+		AssignmentVersion: types.StringNull(),
+		Assignments:       types.ListNull(assignmentType),
+		ComputedUsers:     types.ListNull(computedAssignmentType),
+		ComputedGroups:    types.ListNull(computedAssignmentType),
+	})
+	if util.TestDiagnostic(&response.Diagnostics, diags) {
+		return
+	}
+	//resource.ImportStatePassthroughID(ctx, path.Root("name"), request, response)
 }
