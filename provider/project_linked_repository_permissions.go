@@ -26,17 +26,23 @@ func CreateProjectLinkedRepositoryAssignments(ctx context.Context, receiver Proj
 		return nil, diags
 	}
 
-	deploymentId := plan.getLinkedRepositoryId(ctx)
+	repositoryId := plan.getLinkedRepositoryId(ctx)
 
-	_ = receiver.getClient().RepositoryService().UpdateRolePermissions(deploymentId, "LOGGED_IN", make([]string, 0))
+	_ = receiver.getClient().RepositoryService().UpdateRolePermissions(repositoryId, "LOGGED_IN", make([]string, 0))
 
 	return ApplyNewAssignmentSet(ctx, receiver.getClient().UserService(),
 		*assignmentOrder,
+		func(user string) (*bamboo.UserPermission, error) {
+			return receiver.getClient().RepositoryService().FindAvailableUser(repositoryId, user)
+		},
+		func(group string) (*bamboo.GroupPermission, error) {
+			return receiver.getClient().RepositoryService().FindAvailableGroup(repositoryId, group)
+		},
 		func(user string, requestedPermissions []string) error {
-			return receiver.getClient().RepositoryService().UpdateUserPermissions(deploymentId, user, requestedPermissions)
+			return receiver.getClient().RepositoryService().UpdateUserPermissions(repositoryId, user, requestedPermissions)
 		},
 		func(group string, requestedPermissions []string) error {
-			return receiver.getClient().RepositoryService().UpdateGroupPermissions(deploymentId, group, requestedPermissions)
+			return receiver.getClient().RepositoryService().UpdateGroupPermissions(repositoryId, group, requestedPermissions)
 		},
 	)
 }
@@ -87,17 +93,23 @@ func UpdateProjectLinkedRepositoryAssignments(ctx context.Context, receiver Proj
 	}
 
 	// the plan does not have computed value deployment ID
-	deploymentId := state.getLinkedRepositoryId(ctx)
+	repositoryId := state.getLinkedRepositoryId(ctx)
 
 	return UpdateAssignment(ctx, receiver.getClient().UserService(),
 		*inStateAssignmentOrder,
 		*plannedAssignmentOrder,
 		forceUpdate,
+		func(user string) (*bamboo.UserPermission, error) {
+			return receiver.getClient().RepositoryService().FindAvailableUser(repositoryId, user)
+		},
+		func(group string) (*bamboo.GroupPermission, error) {
+			return receiver.getClient().RepositoryService().FindAvailableGroup(repositoryId, group)
+		},
 		func(user string, requestedPermissions []string) error {
-			return receiver.getClient().RepositoryService().UpdateUserPermissions(deploymentId, user, requestedPermissions)
+			return receiver.getClient().RepositoryService().UpdateUserPermissions(repositoryId, user, requestedPermissions)
 		},
 		func(group string, requestedPermissions []string) error {
-			return receiver.getClient().RepositoryService().UpdateGroupPermissions(deploymentId, group, requestedPermissions)
+			return receiver.getClient().RepositoryService().UpdateGroupPermissions(repositoryId, group, requestedPermissions)
 		},
 	)
 }
@@ -113,18 +125,24 @@ func DeleteProjectLinkedRepositoryAssignments(ctx context.Context, receiver Proj
 		return diags
 	}
 
-	deploymentId := state.getLinkedRepositoryId(ctx)
+	repositoryId := state.getLinkedRepositoryId(ctx)
 
-	assignedPermissions, err := receiver.getClient().RepositoryService().ReadPermissions(deploymentId)
+	assignedPermissions, err := receiver.getClient().RepositoryService().ReadPermissions(repositoryId)
 	if err != nil {
 		return []diag.Diagnostic{diag.NewErrorDiagnostic("Failed to read deployment permissions", err.Error())}
 	}
 
 	return RemoveAssignment(ctx, assignedPermissions, assignmentOrder,
+		func(user string) (*bamboo.UserPermission, error) {
+			return receiver.getClient().RepositoryService().FindAvailableUser(repositoryId, user)
+		},
+		func(group string) (*bamboo.GroupPermission, error) {
+			return receiver.getClient().RepositoryService().FindAvailableGroup(repositoryId, group)
+		},
 		func(user string, requestedPermissions []string) error {
-			return receiver.getClient().RepositoryService().UpdateUserPermissions(deploymentId, user, requestedPermissions)
+			return receiver.getClient().RepositoryService().UpdateUserPermissions(repositoryId, user, requestedPermissions)
 		},
 		func(group string, requestedPermissions []string) error {
-			return receiver.getClient().RepositoryService().UpdateGroupPermissions(deploymentId, group, requestedPermissions)
+			return receiver.getClient().RepositoryService().UpdateGroupPermissions(repositoryId, group, requestedPermissions)
 		})
 }

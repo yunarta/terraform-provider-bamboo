@@ -32,6 +32,12 @@ func CreateLinkedRepositoryAssignments(ctx context.Context, receiver LinkedRepos
 
 	return ApplyNewAssignmentSet(ctx, receiver.getClient().UserService(),
 		*assignmentOrder,
+		func(user string) (*bamboo.UserPermission, error) {
+			return receiver.getClient().RepositoryService().FindAvailableUser(deploymentId, user)
+		},
+		func(group string) (*bamboo.GroupPermission, error) {
+			return receiver.getClient().RepositoryService().FindAvailableGroup(deploymentId, group)
+		},
 		func(user string, requestedPermissions []string) error {
 			return receiver.getClient().RepositoryService().UpdateUserPermissions(deploymentId, user, requestedPermissions)
 		},
@@ -93,6 +99,12 @@ func UpdateLinkedRepositoryAssignments(ctx context.Context, receiver LinkedRepos
 		*inStateAssignmentOrder,
 		*plannedAssignmentOrder,
 		forceUpdate,
+		func(user string) (*bamboo.UserPermission, error) {
+			return receiver.getClient().RepositoryService().FindAvailableUser(deploymentId, user)
+		},
+		func(group string) (*bamboo.GroupPermission, error) {
+			return receiver.getClient().RepositoryService().FindAvailableGroup(deploymentId, group)
+		},
 		func(user string, requestedPermissions []string) error {
 			return receiver.getClient().RepositoryService().UpdateUserPermissions(deploymentId, user, requestedPermissions)
 		},
@@ -121,6 +133,12 @@ func DeleteLinkedRepositoryAssignments(ctx context.Context, receiver LinkedRepos
 	}
 
 	return RemoveAssignment(ctx, assignedPermissions, assignmentOrder,
+		func(user string) (*bamboo.UserPermission, error) {
+			return receiver.getClient().RepositoryService().FindAvailableUser(deploymentId, user)
+		},
+		func(group string) (*bamboo.GroupPermission, error) {
+			return receiver.getClient().RepositoryService().FindAvailableGroup(deploymentId, group)
+		},
 		func(user string, requestedPermissions []string) error {
 			return receiver.getClient().RepositoryService().UpdateUserPermissions(deploymentId, user, requestedPermissions)
 		},

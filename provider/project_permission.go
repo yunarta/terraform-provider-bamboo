@@ -33,6 +33,12 @@ func CreateProjectAssignments(ctx context.Context, receiver ProjectPermissionsRe
 
 	return ApplyNewAssignmentSet(ctx, receiver.getClient().UserService(),
 		*assignmentOrder,
+		func(user string) (*bamboo.UserPermission, error) {
+			return receiver.getClient().ProjectService().FindAvailableUser(projectKey, user)
+		},
+		func(group string) (*bamboo.GroupPermission, error) {
+			return receiver.getClient().ProjectService().FindAvailableGroup(projectKey, group)
+		},
 		func(user string, requestedPermissions []string) error {
 			return receiver.getClient().ProjectService().UpdateUserPermissions(projectKey, user, requestedPermissions)
 		},
@@ -94,6 +100,12 @@ func UpdateProjectAssignments(ctx context.Context, receiver ProjectPermissionsRe
 		*inStateAssignmentOrder,
 		*plannedAssignmentOrder,
 		forceUpdate,
+		func(user string) (*bamboo.UserPermission, error) {
+			return receiver.getClient().ProjectService().FindAvailableUser(projectKey, user)
+		},
+		func(group string) (*bamboo.GroupPermission, error) {
+			return receiver.getClient().ProjectService().FindAvailableGroup(projectKey, group)
+		},
 		func(user string, requestedPermissions []string) error {
 			return receiver.getClient().ProjectService().UpdateUserPermissions(projectKey, user, requestedPermissions)
 		},
@@ -122,6 +134,12 @@ func DeleteProjectAssignments(ctx context.Context, receiver ProjectPermissionsRe
 	}
 
 	return RemoveAssignment(ctx, assignedPermissions, assignmentOrder,
+		func(user string) (*bamboo.UserPermission, error) {
+			return receiver.getClient().ProjectService().FindAvailableUser(projectKey, user)
+		},
+		func(group string) (*bamboo.GroupPermission, error) {
+			return receiver.getClient().ProjectService().FindAvailableGroup(projectKey, group)
+		},
 		func(user string, requestedPermissions []string) error {
 			return receiver.getClient().ProjectService().UpdateUserPermissions(projectKey, user, requestedPermissions)
 		},
