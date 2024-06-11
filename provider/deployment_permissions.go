@@ -33,6 +33,12 @@ func CreateDeploymentAssignments(ctx context.Context, receiver DeploymentPermiss
 
 	return ApplyNewAssignmentSet(ctx, receiver.getClient().UserService(),
 		*assignmentOrder,
+		func(user string) (*bamboo.UserPermission, error) {
+			return receiver.getClient().DeploymentService().FindAvailableUser(deploymentId, user)
+		},
+		func(group string) (*bamboo.GroupPermission, error) {
+			return receiver.getClient().DeploymentService().FindAvailableGroup(deploymentId, group)
+		},
 		func(user string, requestedPermissions []string) error {
 			return receiver.getClient().DeploymentService().UpdateUserPermissions(deploymentId, user, requestedPermissions)
 		},
@@ -94,6 +100,12 @@ func UpdateDeploymentAssignments(ctx context.Context, receiver DeploymentPermiss
 		*inStateAssignmentOrder,
 		*plannedAssignmentOrder,
 		forceUpdate,
+		func(user string) (*bamboo.UserPermission, error) {
+			return receiver.getClient().DeploymentService().FindAvailableUser(deploymentId, user)
+		},
+		func(group string) (*bamboo.GroupPermission, error) {
+			return receiver.getClient().DeploymentService().FindAvailableGroup(deploymentId, group)
+		},
 		func(user string, requestedPermissions []string) error {
 			return receiver.getClient().DeploymentService().UpdateUserPermissions(deploymentId, user, requestedPermissions)
 		},
@@ -122,6 +134,12 @@ func DeleteDeploymentAssignments(ctx context.Context, receiver DeploymentPermiss
 	}
 
 	return RemoveAssignment(ctx, assignedPermissions, assignmentOrder,
+		func(user string) (*bamboo.UserPermission, error) {
+			return receiver.getClient().DeploymentService().FindAvailableUser(deploymentId, user)
+		},
+		func(group string) (*bamboo.GroupPermission, error) {
+			return receiver.getClient().DeploymentService().FindAvailableGroup(deploymentId, group)
+		},
 		func(user string, requestedPermissions []string) error {
 			return receiver.getClient().DeploymentService().UpdateUserPermissions(deploymentId, user, requestedPermissions)
 		},

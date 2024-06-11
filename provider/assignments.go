@@ -37,7 +37,9 @@ type AssignmentOrder struct {
 
 type Assignments []Assignment
 
+type FindUserPermissionsFunc func(user string) (*bamboo.UserPermission, error)
 type UpdateUserPermissionsFunc func(user string, requestedPermissions []string) error
+type FindGroupPermissionsFunc func(group string) (*bamboo.GroupPermission, error)
 type UpdateGroupPermissionsFunc func(group string, requestedPermissions []string) error
 
 func (assignments Assignments) CreateAssignmentOrder(ctx context.Context) (*AssignmentOrder, diag.Diagnostics) {
@@ -160,6 +162,8 @@ type AssignmentResult struct {
 
 func ApplyNewAssignmentSet(ctx context.Context, userService *bamboo.UserService,
 	assignmentOrder AssignmentOrder,
+	findUserPermission FindUserPermissionsFunc,
+	findGroupPermission FindGroupPermissionsFunc,
 	updateUserPermissions UpdateUserPermissionsFunc,
 	updateGroupPermissions UpdateGroupPermissionsFunc) (*AssignmentResult, diag.Diagnostics) {
 
@@ -167,9 +171,12 @@ func ApplyNewAssignmentSet(ctx context.Context, userService *bamboo.UserService,
 	computedGroups := make([]ComputedAssignment, 0)
 
 	for user, requestedPermissions := range assignmentOrder.Users {
-		found, err := userService.FindUser(user)
-		if found == nil {
-			continue
+		if !userService.LookupUser(user) {
+			found, _ := findUserPermission(user)
+			if found == nil {
+				continue
+			}
+			userService.ValidateUser(user)
 		}
 
 		computedUsers = append(computedUsers, ComputedAssignment{
@@ -177,16 +184,19 @@ func ApplyNewAssignmentSet(ctx context.Context, userService *bamboo.UserService,
 			Permissions: requestedPermissions,
 		})
 
-		err = updateUserPermissions(user, requestedPermissions)
+		err := updateUserPermissions(user, requestedPermissions)
 		if err != nil {
 			return nil, []diag.Diagnostic{diag.NewErrorDiagnostic(failedToUpdateUserPermissions, err.Error())}
 		}
 	}
 
 	for group, requestedPermissions := range assignmentOrder.Groups {
-		found, err := userService.FindGroup(group)
-		if found == nil {
-			continue
+		if !userService.LookupGroup(group) {
+			found, _ := findGroupPermission(group)
+			if found == nil {
+				continue
+			}
+			userService.ValidateGroup(group)
 		}
 
 		computedGroups = append(computedGroups, ComputedAssignment{
@@ -194,7 +204,7 @@ func ApplyNewAssignmentSet(ctx context.Context, userService *bamboo.UserService,
 			Permissions: requestedPermissions,
 		})
 
-		err = updateGroupPermissions(group, requestedPermissions)
+		err := updateGroupPermissions(group, requestedPermissions)
 		if err != nil {
 			return nil, []diag.Diagnostic{diag.NewErrorDiagnostic(failedToUpdateGroupPermissions, err.Error())}
 		}
@@ -207,15 +217,17 @@ func UpdateAssignment(ctx context.Context, userService *bamboo.UserService,
 	inStateAssignmentOrder AssignmentOrder,
 	plannedAssignmentOrder AssignmentOrder,
 	forceUpdate bool,
+	findUserPermission FindUserPermissionsFunc,
+	findGroupPermission FindGroupPermissionsFunc,
 	updateUserPermission UpdateUserPermissionsFunc,
 	updateGroupPermission UpdateGroupPermissionsFunc) (*AssignmentResult, diag.Diagnostics) {
 
-	computedUsers, diags := updateUsers(inStateAssignmentOrder, plannedAssignmentOrder, userService, forceUpdate, updateUserPermission)
+	computedUsers, diags := updateUsers(inStateAssignmentOrder, plannedAssignmentOrder, userService, forceUpdate, findUserPermission, updateUserPermission)
 	if diags != nil {
 		return nil, diags
 	}
 
-	computedGroups, diags := updateGroups(inStateAssignmentOrder, plannedAssignmentOrder, userService, forceUpdate, updateGroupPermission)
+	computedGroups, diags := updateGroups(inStateAssignmentOrder, plannedAssignmentOrder, userService, forceUpdate, findGroupPermission, updateGroupPermission)
 	if diags != nil {
 		return nil, diags
 	}
@@ -224,7 +236,7 @@ func UpdateAssignment(ctx context.Context, userService *bamboo.UserService,
 }
 
 func updateUsers(inStateAssignmentOrder AssignmentOrder, plannedAssignmentOrder AssignmentOrder,
-	userService *bamboo.UserService, forceUpdate bool, updateUserPermissions UpdateUserPermissionsFunc) ([]ComputedAssignment, diag.Diagnostics) {
+	userService *bamboo.UserService, forceUpdate bool, findUserPermission FindUserPermissionsFunc, updateUserPermissions UpdateUserPermissionsFunc) ([]ComputedAssignment, diag.Diagnostics) {
 	_, removing := collections.Delta(inStateAssignmentOrder.UserNames, plannedAssignmentOrder.UserNames)
 
 	var computedUsers = make([]ComputedAssignment, 0)
@@ -233,9 +245,12 @@ func updateUsers(inStateAssignmentOrder AssignmentOrder, plannedAssignmentOrder 
 			continue
 		}
 
-		found, err := userService.FindUser(user)
-		if found == nil {
-			continue
+		if !userService.LookupUser(user) {
+			found, _ := findUserPermission(user)
+			if found == nil {
+				continue
+			}
+			userService.ValidateUser(user)
 		}
 
 		requestedPermissions := plannedAssignmentOrder.Users[user]
@@ -246,7 +261,7 @@ func updateUsers(inStateAssignmentOrder AssignmentOrder, plannedAssignmentOrder 
 		})
 
 		if !collections.EqualsIgnoreOrder(inStatePermissions, requestedPermissions) || forceUpdate {
-			err = updateUserPermissions(user, requestedPermissions)
+			err := updateUserPermissions(user, requestedPermissions)
 			if err != nil {
 				return nil, []diag.Diagnostic{diag.NewErrorDiagnostic(failedToUpdateUserPermissions, err.Error())}
 			}
@@ -263,7 +278,7 @@ func updateUsers(inStateAssignmentOrder AssignmentOrder, plannedAssignmentOrder 
 }
 
 func updateGroups(inStateAssignmentOrder AssignmentOrder, plannedAssignmentOrder AssignmentOrder,
-	userService *bamboo.UserService, forceUpdate bool, updateGroupPermissions UpdateGroupPermissionsFunc) ([]ComputedAssignment, diag.Diagnostics) {
+	userService *bamboo.UserService, forceUpdate bool, findGroupPermission FindGroupPermissionsFunc, updateGroupPermissions UpdateGroupPermissionsFunc) ([]ComputedAssignment, diag.Diagnostics) {
 	_, removing := collections.Delta(inStateAssignmentOrder.GroupNames, plannedAssignmentOrder.GroupNames)
 
 	var computedGroups = make([]ComputedAssignment, 0)
@@ -272,9 +287,12 @@ func updateGroups(inStateAssignmentOrder AssignmentOrder, plannedAssignmentOrder
 			continue
 		}
 
-		found, err := userService.FindGroup(group)
-		if found == nil {
-			continue
+		if !userService.LookupGroup(group) {
+			found, _ := findGroupPermission(group)
+			if found == nil {
+				continue
+			}
+			userService.ValidateGroup(group)
 		}
 
 		requestedPermissions := plannedAssignmentOrder.Groups[group]
@@ -285,7 +303,7 @@ func updateGroups(inStateAssignmentOrder AssignmentOrder, plannedAssignmentOrder
 		})
 
 		if !collections.EqualsIgnoreOrder(inStatePermissions, requestedPermissions) || forceUpdate {
-			err = updateGroupPermissions(group, requestedPermissions)
+			err := updateGroupPermissions(group, requestedPermissions)
 			if err != nil {
 				return nil, []diag.Diagnostic{diag.NewErrorDiagnostic(failedToUpdateGroupPermissions, err.Error())}
 			}
@@ -304,6 +322,8 @@ func updateGroups(inStateAssignmentOrder AssignmentOrder, plannedAssignmentOrder
 
 func RemoveAssignment(ctx context.Context,
 	assignedPermissions *bamboo.ObjectPermission, assignmentOrder *AssignmentOrder,
+	findUserPermission FindUserPermissionsFunc,
+	findGroupPermission FindGroupPermissionsFunc,
 	updateUserPermissions UpdateUserPermissionsFunc,
 	updateGroupPermissions UpdateGroupPermissionsFunc) diag.Diagnostics {
 
