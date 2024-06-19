@@ -6,9 +6,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/yunarta/terraform-atlassian-api-client/bamboo"
 	"github.com/yunarta/terraform-provider-commons/util"
@@ -55,14 +53,14 @@ func (receiver *AgentAssignmentResource) Schema(ctx context.Context, request res
 			"agent": schema.Int64Attribute{
 				Required: true,
 				PlanModifiers: []planmodifier.Int64{
-					int64planmodifier.RequiresReplaceIfConfigured(),
+					util.ReplaceIfInt64Diff(),
 				},
 				MarkdownDescription: "Numeric id of the agent.",
 			},
 			"type": schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplaceIfConfigured(),
+					util.ReplaceIfStringDiff(),
 				},
 				Validators: []validator.String{
 					stringvalidator.OneOf("AGENT", "IMAGE", "EPHEMERAL"),
@@ -72,14 +70,14 @@ func (receiver *AgentAssignmentResource) Schema(ctx context.Context, request res
 			"executable_id": schema.Int64Attribute{
 				Optional: true,
 				PlanModifiers: []planmodifier.Int64{
-					int64planmodifier.RequiresReplaceIfConfigured(),
+					util.ReplaceIfInt64Diff(),
 				},
 				MarkdownDescription: "Numeric id of the executable. As per current only deployment project is usable as i dont have data source for other type yet.",
 			},
 			"executable_type": schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplaceIfConfigured(),
+					util.ReplaceIfStringDiff(),
 				},
 				Validators: []validator.String{
 					//stringvalidator.OneOf("DEPLOYMENT_PROJECT"),

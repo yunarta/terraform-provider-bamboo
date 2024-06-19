@@ -8,8 +8,8 @@ import (
 type PlanModel struct {
 	RetainOnDelete types.Bool   `tfsdk:"retain_on_delete"`
 	Id             types.Int64  `tfsdk:"id"`
-	ProjectKey     types.String `tfsdk:"project"`
 	Key            types.String `tfsdk:"key"`
+	PlanKey        types.String `tfsdk:"plan_key"`
 	Name           types.String `tfsdk:"name"`
 }
 
@@ -31,8 +31,8 @@ func NewPlanModel(plan PlanModel, bambooPlan *bamboo.Plan) *PlanModel {
 	return &PlanModel{
 		RetainOnDelete: plan.RetainOnDelete,
 		Id:             types.Int64Value(bambooPlan.Id),
-		ProjectKey:     types.StringValue(bambooPlan.ProjectKey),
-		Key:            types.StringValue(bambooPlan.ShortKey),
+		Key:            types.StringValue(bambooPlan.ProjectKey),
+		PlanKey:        types.StringValue(bambooPlan.ShortKey),
 		Name:           plan.Name,
 	}
 }
