@@ -8,7 +8,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/yunarta/terraform-atlassian-api-client/bamboo"
 	"github.com/yunarta/terraform-provider-commons/util"
@@ -61,17 +60,17 @@ The priority block has a priority that defines the final assigned permissions of
 				Computed:            true,
 				MarkdownDescription: "Plan id.",
 			},
-			"project": schema.StringAttribute{
-				Required: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplaceIfConfigured(),
-				},
-				MarkdownDescription: "Project key.",
-			},
 			"key": schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplaceIfConfigured(),
+					util.ReplaceIfStringDiff(),
+				},
+				MarkdownDescription: "Project key.",
+			},
+			"plan_key": schema.StringAttribute{
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					util.ReplaceIfStringDiff(),
 				},
 				MarkdownDescription: "Plan key.",
 			},
@@ -100,9 +99,9 @@ func (receiver *PlanResource) Create(ctx context.Context, request resource.Creat
 	}
 
 	bambooPlan, err := receiver.client.PlanService().Create(bamboo.CreatePlan{
-		PlanKey:    plan.Key.ValueString(),
+		PlanKey:    plan.PlanKey.ValueString(),
 		Name:       plan.Name.ValueString(),
-		ProjectKey: plan.ProjectKey.ValueString(),
+		ProjectKey: plan.Key.ValueString(),
 	})
 	if util.TestError(&response.Diagnostics, err, "Failed to create project") {
 		return
@@ -133,7 +132,7 @@ func (receiver *PlanResource) Read(ctx context.Context, request resource.ReadReq
 		return
 	}
 
-	bambooPlan, err := receiver.client.PlanService().Read(fmt.Sprintf("%s-%s", state.ProjectKey.ValueString(), state.Key.ValueString()))
+	bambooPlan, err := receiver.client.PlanService().Read(fmt.Sprintf("%s-%s", state.Key.ValueString(), state.PlanKey.ValueString()))
 	if util.TestError(&response.Diagnostics, err, "Failed to create plan") {
 		return
 	}
@@ -168,7 +167,7 @@ func (receiver *PlanResource) Update(ctx context.Context, request resource.Updat
 		return
 	}
 
-	bambooPlan, err := receiver.client.PlanService().Read(fmt.Sprintf("%s-%s", state.ProjectKey.ValueString(), state.Key.ValueString()))
+	bambooPlan, err := receiver.client.PlanService().Read(fmt.Sprintf("%s-%s", state.Key.ValueString(), state.PlanKey.ValueString()))
 	if util.TestError(&response.Diagnostics, err, "Failed to read plan") {
 		return
 	}
@@ -199,7 +198,7 @@ func (receiver *PlanResource) Delete(ctx context.Context, request resource.Delet
 	}
 
 	if !state.RetainOnDelete.ValueBool() {
-		err := receiver.client.PlanService().Delete(fmt.Sprintf("%s-%s", state.ProjectKey.ValueString(), state.Key.ValueString()))
+		err := receiver.client.PlanService().Delete(fmt.Sprintf("%s-%s", state.Key.ValueString(), state.PlanKey.ValueString()))
 		if util.TestError(&response.Diagnostics, err, "Failed to delete plan") {
 			return
 		}
@@ -211,9 +210,9 @@ func (receiver *PlanResource) Delete(ctx context.Context, request resource.Delet
 func (receiver *PlanResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
 	slug := strings.Split(request.ID, "-")
 	diags := response.State.Set(ctx, &PlanModel{
-		ProjectKey: types.StringValue(slug[0]),
-		Key:        types.StringValue(slug[1]),
-		Name:       types.StringNull(),
+		Key:     types.StringValue(slug[0]),
+		PlanKey: types.StringValue(slug[1]),
+		Name:    types.StringNull(),
 	})
 	if util.TestDiagnostic(&response.Diagnostics, diags) {
 		return
