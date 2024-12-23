@@ -16,6 +16,7 @@ type ProjectLinkedRepositoryModel struct {
 	Key     types.String `tfsdk:"key"`
 	Project types.String `tfsdk:"project"`
 	Slug    types.String `tfsdk:"slug"`
+	Branch  types.String `tfsdk:"branch"`
 
 	AssignmentVersion types.String `tfsdk:"assignment_version"`
 	Assignments       types.List   `tfsdk:"assignments"`
@@ -45,6 +46,7 @@ func NewProjectLinkedRepositoryModel(plan ProjectLinkedRepositoryModel, reposito
 		RssEnabled:        plan.RssEnabled,
 		Project:           plan.Project,
 		Slug:              plan.Slug,
+		Branch:            plan.Branch,
 		AssignmentVersion: plan.AssignmentVersion,
 		Assignments:       plan.Assignments,
 		ComputedUsers:     assignmentResult.ComputedUsers,
