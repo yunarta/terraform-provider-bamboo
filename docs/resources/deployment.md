@@ -43,7 +43,7 @@ In order for the execution to be successful, the user must have user access to a
 
 Required:
 
-- `permissions` (List of String) List of permissions assignable to the users and groups (READ, CREATE, CREATEREPOSITORY, ADMINISTRATION, CLONE, WRITE, BUILD, VIEWCONFIGURATION)
+- `permissions` (List of String) List of permissions assignable to the users and groups (APPROVERELEASE, READ, WRITE, VIEWCONFIGURATION)
 - `priority` (Number) Priority of this block
 
 Optional:

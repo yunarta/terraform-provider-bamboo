@@ -31,6 +31,7 @@ The priority block has a priority that defines the final assigned permissions of
 
 - `assignment_version` (String) Assignment version, used to force update the permission.
 - `assignments` (Block List) Assignment block (see [below for nested schema](#nestedblock--assignments))
+- `branch` (String) Bitbucket repository branch.
 - `rss_enabled` (Boolean) Flag to modify Bamboo Spec flag after creation.
 
 ### Read-Only

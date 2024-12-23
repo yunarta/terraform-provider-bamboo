@@ -24,7 +24,3 @@ This resource define assignment of executable (project, plan, job, deployment, e
 ### Optional
 
 - `executable_id` (Number) Numeric id of the executable. As per current only deployment project is usable as i dont have data source for other type yet.
-
-### Read-Only
-
-- `id` (Number) Numeric id of the assignment.
