@@ -3,6 +3,8 @@ package provider
 import (
 	"context"
 	"fmt"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
+	"strconv"
 	"strings"
 
 	"github.com/hashicorp/terraform-plugin-framework/diag"
@@ -77,6 +79,12 @@ The priority block has a priority that defines the final assigned permissions of
 				Required:            true,
 				MarkdownDescription: "Bitbucket repository slug.",
 			},
+			"branch": schema.StringAttribute{
+				Optional:            true,
+				Computed:            true,
+				MarkdownDescription: "Bitbucket repository branch.",
+				Default:             stringdefault.StaticString("master"),
+			},
 			"assignment_version": schema.StringAttribute{
 				Optional:            true,
 				MarkdownDescription: "Assignment version, used to force update the permission.",
@@ -128,11 +136,12 @@ func (receiver *LinkedRepositoryResource) Create(ctx context.Context, request re
 	}
 
 	repositoryId, err := receiver.client.RepositoryService().Create(bamboo.CreateRepository{
-		Name:           plan.Name.ValueString(),
-		ProjectKey:     strings.ToLower(plan.Project.ValueString()),
-		RepositorySlug: strings.ToLower(plan.Slug.ValueString()),
-		ServerId:       receiver.config.BambooRss.Server.ValueString(),
-		ServerName:     receiver.config.BambooRss.Name.ValueString(),
+		Name:             plan.Name.ValueString(),
+		ProjectKey:       strings.ToLower(plan.Project.ValueString()),
+		RepositorySlug:   strings.ToLower(plan.Slug.ValueString()),
+		RepositoryBranch: strings.ToLower(plan.Branch.ValueString()),
+		ServerId:         receiver.config.BambooRss.Server.ValueString(),
+		ServerName:       receiver.config.BambooRss.Name.ValueString(),
 		CloneUrl: strings.ToLower(fmt.Sprintf(
 			receiver.config.BambooRss.CloneUrl.ValueString(),
 			plan.Project.ValueString(),
@@ -249,13 +258,14 @@ func (receiver *LinkedRepositoryResource) Update(ctx context.Context, request re
 		}
 	}
 
-	if !plan.Project.Equal(state.Project) || !plan.Slug.Equal(state.Slug) {
+	if !plan.Project.Equal(state.Project) || !plan.Slug.Equal(state.Slug) || !plan.Branch.Equal(state.Branch) {
 		err = receiver.client.RepositoryService().Update(repository.ID, bamboo.CreateRepository{
-			Name:           plan.Name.ValueString(),
-			ProjectKey:     strings.ToLower(plan.Project.ValueString()),
-			RepositorySlug: strings.ToLower(plan.Slug.ValueString()),
-			ServerId:       receiver.config.BambooRss.Server.ValueString(),
-			ServerName:     receiver.config.BambooRss.Name.ValueString(),
+			Name:             plan.Name.ValueString(),
+			ProjectKey:       strings.ToLower(plan.Project.ValueString()),
+			RepositorySlug:   strings.ToLower(plan.Slug.ValueString()),
+			RepositoryBranch: strings.ToLower(plan.Branch.ValueString()),
+			ServerId:         receiver.config.BambooRss.Server.ValueString(),
+			ServerName:       receiver.config.BambooRss.Name.ValueString(),
 			CloneUrl: strings.ToLower(fmt.Sprintf(
 				receiver.config.BambooRss.CloneUrl.ValueString(),
 				plan.Project.ValueString(),
@@ -282,6 +292,26 @@ func (receiver *LinkedRepositoryResource) Update(ctx context.Context, request re
 }
 
 func (receiver *LinkedRepositoryResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
+	var (
+		diags diag.Diagnostics
+		state LinkedRepositoryModel
+	)
+
+	diags = request.State.Get(ctx, &state)
+	if util.TestDiagnostic(&response.Diagnostics, diags) {
+		return
+	}
+
+	repositoryId, err := strconv.Atoi(state.ID.ValueString())
+	if util.TestError(&response.Diagnostics, err, errorFailedToUpdateRepository) {
+		return
+	}
+
+	err = receiver.client.RepositoryService().Delete(repositoryId)
+	if util.TestError(&response.Diagnostics, err, errorFailedToUpdateRepository) {
+		return
+	}
+
 	response.State.RemoveResource(ctx)
 }
 

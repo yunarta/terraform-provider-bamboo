@@ -3,6 +3,8 @@ package provider
 import (
 	"context"
 	"fmt"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
+	"strconv"
 	"strings"
 
 	"github.com/hashicorp/terraform-plugin-framework/diag"
@@ -83,6 +85,12 @@ The priority block has a priority that defines the final assigned permissions of
 			"slug": schema.StringAttribute{
 				Required:            true,
 				MarkdownDescription: "Bitbucket repository slug.",
+			},
+			"branch": schema.StringAttribute{
+				Optional:            true,
+				Computed:            true,
+				MarkdownDescription: "Bitbucket repository branch.",
+				Default:             stringdefault.StaticString("master"),
 			},
 			"assignment_version": schema.StringAttribute{
 				Optional:            true,
@@ -307,6 +315,26 @@ func (receiver *ProjectLinkedRepositoryResource) Update(ctx context.Context, req
 }
 
 func (receiver *ProjectLinkedRepositoryResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
+	var (
+		diags diag.Diagnostics
+		state ProjectLinkedRepositoryModel
+	)
+
+	diags = request.State.Get(ctx, &state)
+	if util.TestDiagnostic(&response.Diagnostics, diags) {
+		return
+	}
+
+	repositoryId, err := strconv.Atoi(state.ID.ValueString())
+	if util.TestError(&response.Diagnostics, err, errorFailedToUpdateRepository) {
+		return
+	}
+
+	err = receiver.client.RepositoryService().DeleteProject(state.Project.ValueString(), repositoryId)
+	if util.TestError(&response.Diagnostics, err, errorFailedToUpdateRepository) {
+		return
+	}
+
 	response.State.RemoveResource(ctx)
 }
 
