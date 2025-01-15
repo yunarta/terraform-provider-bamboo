@@ -206,7 +206,7 @@ func (receiver *LinkedRepositoryResource) Read(ctx context.Context, request reso
 		return
 	}
 
-	computation, diags := CreateLinkedRepositoryAssignments(ctx, receiver, state)
+	computation, diags := ComputeProjectLinkedRepositoryAssignments(ctx, receiver, state)
 	if util.TestDiagnostic(&response.Diagnostics, diags) {
 		return
 	}
