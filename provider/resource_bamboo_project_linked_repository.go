@@ -196,7 +196,7 @@ func (receiver *ProjectLinkedRepositoryResource) Create(ctx context.Context, req
 	plan.ID = types.StringValue(fmt.Sprintf("%v", repository.ID))
 	diags = response.State.SetAttribute(ctx, path.Root("id"), plan.ID)
 
-	computation, diags := ComputeProjectLinkedRepositoryAssignments(ctx, receiver, plan)
+	computation, diags := CreateProjectLinkedRepositoryAssignments(ctx, receiver, plan)
 	if util.TestDiagnostic(&response.Diagnostics, diags) {
 		return
 	}
@@ -229,7 +229,7 @@ func (receiver *ProjectLinkedRepositoryResource) Read(ctx context.Context, reque
 		return
 	}
 
-	computation, diags := CreateProjectLinkedRepositoryAssignments(ctx, receiver, state)
+	computation, diags := ComputeProjectLinkedRepositoryAssignments(ctx, receiver, state)
 	if util.TestDiagnostic(&response.Diagnostics, diags) {
 		return
 	}
