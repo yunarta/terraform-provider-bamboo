@@ -127,7 +127,8 @@ func (receiver *LinkedRepositoryResource) Create(ctx context.Context, request re
 
 	repository, err := receiver.client.RepositoryService().Read(plan.Name.ValueString())
 	if err == nil && repository != nil {
-		response.Diagnostics.AddError("linked repository already exists", "Unable to create as the requested repository already exists")
+		response.Diagnostics.AddError("linked repository already exists", "Unable to create as the requested repository already exists, manual deletion of linked repository may be required")
+		return
 	}
 
 	diags = request.Plan.Get(ctx, &plan)
