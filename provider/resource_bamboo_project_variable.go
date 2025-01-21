@@ -133,6 +133,7 @@ func (receiver *ProjectVariableResource) Read(ctx context.Context, request resou
 
 	if value == "********" && state.Secret.IsNull() {
 		response.Diagnostics.AddError("Cannot import secret", fmt.Sprintf("%s is secret", state.Name.ValueString()))
+		return
 	}
 
 	if !state.Secret.IsNull() {

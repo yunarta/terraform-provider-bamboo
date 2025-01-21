@@ -155,7 +155,8 @@ func (receiver *ProjectLinkedRepositoryResource) Create(ctx context.Context, req
 
 	repository, err := receiver.client.RepositoryService().ReadProject(plan.Key.ValueString(), plan.Name.ValueString())
 	if err == nil && repository != nil {
-		response.Diagnostics.AddError("linked repository already exists", "Unable to create as the requested repository already exists")
+		response.Diagnostics.AddError("linked repository already exists", "Unable to create as the requested repository already exists, manual deletion of project linked repository may be required")
+		return
 	}
 
 	repositoryId, err := receiver.client.RepositoryService().CreateProject(bamboo.CreateProjectRepository{
