@@ -63,7 +63,7 @@ In order for the execution to be successful, the user must have user access to a
 			"retain_on_delete": schema.BoolAttribute{
 				Optional:            true,
 				Computed:            true,
-				Default:             booldefault.StaticBool(true),
+				Default:             booldefault.StaticBool(false),
 				MarkdownDescription: "Default value is `true`, and if the value set to `false` when the resource destroyed, the permission will be removed.",
 			},
 			"key": schema.StringAttribute{
@@ -92,7 +92,7 @@ In order for the execution to be successful, the user must have user access to a
 			"retain_on_delete": schema.BoolAttribute{
 				Optional:            true,
 				Computed:            true,
-				Default:             booldefault.StaticBool(true),
+				Default:             booldefault.StaticBool(false),
 				MarkdownDescription: "Default value is `true`, and if the value set to `false` when the resource destroyed, the permission will be removed.",
 			},
 			"key": schema.StringAttribute{

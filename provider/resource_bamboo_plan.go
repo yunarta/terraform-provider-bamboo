@@ -54,7 +54,7 @@ The priority block has a priority that defines the final assigned permissions of
 			"retain_on_delete": schema.BoolAttribute{
 				Optional:            true,
 				Computed:            true,
-				Default:             booldefault.StaticBool(true),
+				Default:             booldefault.StaticBool(false),
 				MarkdownDescription: "Default value is `true`, and if the value set to `false` when the resource destroyed, the project will be removed.",
 			},
 			"id": schema.Int64Attribute{
@@ -93,7 +93,7 @@ The priority block has a priority that defines the final assigned permissions of
 			"retain_on_delete": schema.BoolAttribute{
 				Optional:            true,
 				Computed:            true,
-				Default:             booldefault.StaticBool(true),
+				Default:             booldefault.StaticBool(false),
 				MarkdownDescription: "Default value is `true`, and if the value set to `false` when the resource destroyed, the project will be removed.",
 			},
 			"id": schema.Int64Attribute{
