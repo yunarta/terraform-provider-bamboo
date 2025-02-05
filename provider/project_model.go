@@ -7,9 +7,20 @@ import (
 	"github.com/yunarta/terraform-atlassian-api-client/bamboo"
 )
 
-type ProjectModel struct {
+type ProjectModel0 struct {
 	RetainOnDelete    types.Bool   `tfsdk:"retain_on_delete"`
 	Key               types.String `tfsdk:"key"`
+	Name              types.String `tfsdk:"name"`
+	Description       types.String `tfsdk:"description"`
+	AssignmentVersion types.String `tfsdk:"assignment_version"`
+	Assignments       types.List   `tfsdk:"assignments"`
+	ComputedUsers     types.List   `tfsdk:"computed_users"`
+	ComputedGroups    types.List   `tfsdk:"computed_groups"`
+}
+
+type ProjectModel struct {
+	RetainOnDelete    types.Bool   `tfsdk:"retain_on_delete"`
+	Project           types.String `tfsdk:"project"`
 	Name              types.String `tfsdk:"name"`
 	Description       types.String `tfsdk:"description"`
 	AssignmentVersion types.String `tfsdk:"assignment_version"`
@@ -28,13 +39,26 @@ func (d ProjectModel) getAssignment(ctx context.Context) (Assignments, diag.Diag
 }
 
 func (d ProjectModel) getProjectKey(ctx context.Context) string {
-	return d.Key.ValueString()
+	return d.Project.ValueString()
+}
+
+func FromProjectModel0(plan ProjectModel0) *ProjectModel {
+	return &ProjectModel{
+		RetainOnDelete:    plan.RetainOnDelete,
+		Project:           plan.Key,
+		Name:              plan.Name,
+		Description:       plan.Description,
+		AssignmentVersion: plan.AssignmentVersion,
+		Assignments:       plan.Assignments,
+		ComputedUsers:     plan.ComputedUsers,
+		ComputedGroups:    plan.ComputedGroups,
+	}
 }
 
 func NewProjectModel(plan ProjectModel, project *bamboo.Project, assignmentResult *AssignmentResult) *ProjectModel {
 	return &ProjectModel{
 		RetainOnDelete:    plan.RetainOnDelete,
-		Key:               types.StringValue(project.Key),
+		Project:           types.StringValue(project.Key),
 		Name:              types.StringValue(project.Name),
 		Description:       types.StringValue(project.Description),
 		AssignmentVersion: plan.AssignmentVersion,

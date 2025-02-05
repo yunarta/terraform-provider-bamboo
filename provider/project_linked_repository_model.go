@@ -8,7 +8,7 @@ import (
 	"strconv"
 )
 
-type ProjectLinkedRepositoryModel struct {
+type ProjectLinkedRepositoryModel0 struct {
 	ID         types.String `tfsdk:"id"`
 	Name       types.String `tfsdk:"name"`
 	RssEnabled types.Bool   `tfsdk:"rss_enabled"`
@@ -17,6 +17,22 @@ type ProjectLinkedRepositoryModel struct {
 	Project types.String `tfsdk:"project"`
 	Slug    types.String `tfsdk:"slug"`
 	Branch  types.String `tfsdk:"branch"`
+
+	AssignmentVersion types.String `tfsdk:"assignment_version"`
+	Assignments       types.List   `tfsdk:"assignments"`
+	ComputedUsers     types.List   `tfsdk:"computed_users"`
+	ComputedGroups    types.List   `tfsdk:"computed_groups"`
+}
+
+type ProjectLinkedRepositoryModel struct {
+	ID         types.String `tfsdk:"id"`
+	Name       types.String `tfsdk:"name"`
+	RssEnabled types.Bool   `tfsdk:"rss_enabled"`
+
+	Project          types.String `tfsdk:"project"`
+	BitbucketProject types.String `tfsdk:"bitbucket_project"`
+	Slug             types.String `tfsdk:"slug"`
+	Branch           types.String `tfsdk:"branch"`
 
 	AssignmentVersion types.String `tfsdk:"assignment_version"`
 	Assignments       types.List   `tfsdk:"assignments"`
@@ -38,13 +54,29 @@ func (d ProjectLinkedRepositoryModel) getLinkedRepositoryId(ctx context.Context)
 	return deploymentId
 }
 
+func FromProjectLinkedRepositoryModel0(plan ProjectLinkedRepositoryModel0) *ProjectLinkedRepositoryModel {
+	return &ProjectLinkedRepositoryModel{
+		ID:                plan.ID,
+		Project:           plan.Key,
+		Name:              plan.Name,
+		RssEnabled:        plan.RssEnabled,
+		BitbucketProject:  plan.Project,
+		Slug:              plan.Slug,
+		Branch:            plan.Branch,
+		AssignmentVersion: plan.AssignmentVersion,
+		Assignments:       plan.Assignments,
+		ComputedUsers:     plan.ComputedUsers,
+		ComputedGroups:    plan.ComputedGroups,
+	}
+}
+
 func NewProjectLinkedRepositoryModel(plan ProjectLinkedRepositoryModel, repositoryId int, assignmentResult *AssignmentResult) *ProjectLinkedRepositoryModel {
 	return &ProjectLinkedRepositoryModel{
 		ID:                types.StringValue(fmt.Sprintf("%v", repositoryId)),
-		Key:               plan.Key,
+		Project:           plan.Project,
 		Name:              plan.Name,
 		RssEnabled:        plan.RssEnabled,
-		Project:           plan.Project,
+		BitbucketProject:  plan.BitbucketProject,
 		Slug:              plan.Slug,
 		Branch:            plan.Branch,
 		AssignmentVersion: plan.AssignmentVersion,

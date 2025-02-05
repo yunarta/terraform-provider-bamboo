@@ -11,9 +11,9 @@ import (
 )
 
 type ProjectData struct {
-	Key    types.String `tfsdk:"key"`
-	Users  types.Map    `tfsdk:"users"`
-	Groups types.Map    `tfsdk:"groups"`
+	Project types.String `tfsdk:"project"`
+	Users   types.Map    `tfsdk:"users"`
+	Groups  types.Map    `tfsdk:"groups"`
 }
 
 var (
@@ -49,7 +49,7 @@ func (receiver *ProjectDataSource) Schema(ctx context.Context, request datasourc
 		MarkdownDescription: `This data source define a lookup of project permissions`,
 		DeprecationMessage:  "Use project_permissions instead",
 		Attributes: map[string]schema.Attribute{
-			"key": schema.StringAttribute{
+			"project": schema.StringAttribute{
 				Required:            true,
 				MarkdownDescription: "Project key.",
 			},
@@ -82,7 +82,7 @@ func (receiver *ProjectDataSource) Read(ctx context.Context, request datasource.
 		return
 	}
 
-	assignedPermissions, err := receiver.client.ProjectService().ReadPermissions(config.Key.ValueString())
+	assignedPermissions, err := receiver.client.ProjectService().ReadPermissions(config.Project.ValueString())
 	if util.TestError(&response.Diagnostics, err, "Failed to read deployment repositories") {
 		return
 	}
@@ -93,9 +93,9 @@ func (receiver *ProjectDataSource) Read(ctx context.Context, request datasource.
 	}
 
 	diags = response.State.Set(ctx, &ProjectData{
-		Key:    config.Key,
-		Users:  users,
-		Groups: groups,
+		Project: config.Project,
+		Users:   users,
+		Groups:  groups,
 	})
 	if util.TestDiagnostic(&response.Diagnostics, diags) {
 		return

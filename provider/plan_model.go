@@ -5,10 +5,18 @@ import (
 	"github.com/yunarta/terraform-atlassian-api-client/bamboo"
 )
 
-type PlanModel struct {
+type PlanModel0 struct {
 	RetainOnDelete types.Bool   `tfsdk:"retain_on_delete"`
 	Id             types.Int64  `tfsdk:"id"`
 	Key            types.String `tfsdk:"key"`
+	PlanKey        types.String `tfsdk:"plan_key"`
+	Name           types.String `tfsdk:"name"`
+}
+
+type PlanModel struct {
+	RetainOnDelete types.Bool   `tfsdk:"retain_on_delete"`
+	Id             types.Int64  `tfsdk:"id"`
+	Project        types.String `tfsdk:"project"`
 	PlanKey        types.String `tfsdk:"plan_key"`
 	Name           types.String `tfsdk:"name"`
 }
@@ -26,12 +34,22 @@ type PlanModel struct {
 //	return d.Key.ValueString()
 //}
 
+func FromPlanModel0(plan PlanModel0) *PlanModel {
+	return &PlanModel{
+		RetainOnDelete: plan.RetainOnDelete,
+		Id:             plan.Id,
+		Project:        plan.Key,
+		PlanKey:        plan.PlanKey,
+		Name:           plan.Name,
+	}
+}
+
 func NewPlanModel(plan PlanModel, bambooPlan *bamboo.Plan) *PlanModel {
 	//id, _ := strconv.Atoi(bambooPlan.Id)
 	return &PlanModel{
 		RetainOnDelete: plan.RetainOnDelete,
 		Id:             types.Int64Value(bambooPlan.Id),
-		Key:            types.StringValue(bambooPlan.ProjectKey),
+		Project:        types.StringValue(bambooPlan.ProjectKey),
 		PlanKey:        types.StringValue(bambooPlan.ShortKey),
 		Name:           plan.Name,
 	}

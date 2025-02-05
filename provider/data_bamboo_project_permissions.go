@@ -11,7 +11,7 @@ import (
 )
 
 type ProjectPermissionsData struct {
-	Key    string    `tfsdk:"key"`
+	Key    string    `tfsdk:"project"`
 	Users  types.Map `tfsdk:"users"`
 	Groups types.Map `tfsdk:"groups"`
 }
@@ -48,7 +48,7 @@ func (receiver *ProjectPermissionsDataSource) Schema(ctx context.Context, reques
 	response.Schema = schema.Schema{
 		MarkdownDescription: `This data source define a lookup of project permissions`,
 		Attributes: map[string]schema.Attribute{
-			"key": schema.StringAttribute{
+			"project": schema.StringAttribute{
 				Required:            true,
 				MarkdownDescription: "Project key.",
 			},

@@ -16,17 +16,24 @@ import (
 	"strconv"
 )
 
-type ProjectRepositoriesModel struct {
+type ProjectRepositoriesModel0 struct {
 	RetainOnDelete types.Bool   `tfsdk:"retain_on_delete"`
 	Key            types.String `tfsdk:"key"`
 	Repositories   types.List   `tfsdk:"repositories"`
 }
 
+type ProjectRepositoriesModel struct {
+	RetainOnDelete types.Bool   `tfsdk:"retain_on_delete"`
+	Project        types.String `tfsdk:"project"`
+	Repositories   types.List   `tfsdk:"repositories"`
+}
+
 var (
-	_ resource.Resource                = &ProjectRepositoriesResource{}
-	_ resource.ResourceWithConfigure   = &ProjectRepositoriesResource{}
-	_ resource.ResourceWithImportState = &ProjectRepositoriesResource{}
-	_ ConfigurableReceiver             = &ProjectRepositoriesResource{}
+	_ resource.Resource                 = &ProjectRepositoriesResource{}
+	_ resource.ResourceWithConfigure    = &ProjectRepositoriesResource{}
+	_ resource.ResourceWithImportState  = &ProjectRepositoriesResource{}
+	_ resource.ResourceWithUpgradeState = &ProjectRepositoriesResource{}
+	_ ConfigurableReceiver              = &ProjectRepositoriesResource{}
 )
 
 func NewProjectRepositoriesResource() resource.Resource {
@@ -47,8 +54,8 @@ func (receiver *ProjectRepositoriesResource) Metadata(ctx context.Context, reque
 	response.TypeName = request.ProviderTypeName + "_project_repositories"
 }
 
-func (receiver *ProjectRepositoriesResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
-	response.Schema = schema.Schema{
+func (receiver *ProjectRepositoriesResource) schemaV0() schema.Schema {
+	return schema.Schema{
 		MarkdownDescription: `This resource define project repository spec permissions.
 
 In order for the execution to be successful, the user must have user access to all the specified repositories.`,
@@ -72,6 +79,63 @@ In order for the execution to be successful, the user must have user access to a
 				MarkdownDescription: "This project will add this list of linked repositories into its permission.",
 			},
 		},
+	}
+}
+
+func (receiver *ProjectRepositoriesResource) schemaV1() schema.Schema {
+	return schema.Schema{
+		Version: 1,
+		MarkdownDescription: `This resource define project repository spec permissions.
+
+In order for the execution to be successful, the user must have user access to all the specified repositories.`,
+		Attributes: map[string]schema.Attribute{
+			"retain_on_delete": schema.BoolAttribute{
+				Optional:            true,
+				Computed:            true,
+				Default:             booldefault.StaticBool(true),
+				MarkdownDescription: "Default value is `true`, and if the value set to `false` when the resource destroyed, the permission will be removed.",
+			},
+			"key": schema.StringAttribute{
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					util.ReplaceIfStringDiff(),
+				},
+				MarkdownDescription: "Project key where the variable will be added",
+			},
+			"repositories": schema.ListAttribute{
+				Required:            true,
+				ElementType:         types.StringType,
+				MarkdownDescription: "This project will add this list of linked repositories into its permission.",
+			},
+		},
+	}
+}
+
+func (receiver *ProjectRepositoriesResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
+	response.Schema = receiver.schemaV1()
+}
+
+func (receiver *ProjectRepositoriesResource) UpgradeState(ctx context.Context) map[int64]resource.StateUpgrader {
+	v0 := receiver.schemaV0()
+	return map[int64]resource.StateUpgrader{
+		0: {
+			PriorSchema:   &v0,
+			StateUpgrader: receiver.upgradeExampleResourceStateV0toV1,
+		},
+	}
+}
+
+func (receiver *ProjectRepositoriesResource) upgradeExampleResourceStateV0toV1(ctx context.Context, req resource.UpgradeStateRequest, resp *resource.UpgradeStateResponse) {
+	var old ProjectRepositoriesModel0
+	req.State.Get(ctx, &old)
+
+	diags := resp.State.Set(ctx, &ProjectRepositoriesModel{
+		RetainOnDelete: old.RetainOnDelete,
+		Project:        old.Key,
+		Repositories:   old.Repositories,
+	})
+	if util.TestDiagnostic(&resp.Diagnostics, diags) {
+		return
 	}
 }
 
@@ -102,7 +166,7 @@ func (receiver *ProjectRepositoriesResource) Create(ctx context.Context, request
 			return
 		}
 
-		_, err = receiver.client.ProjectService().AddSpecRepositories(plan.Key.ValueString(), repositoryId)
+		_, err = receiver.client.ProjectService().AddSpecRepositories(plan.Project.ValueString(), repositoryId)
 		if util.TestError(&response.Diagnostics, err, errorFailedToAddProjectRepositories) {
 			return
 		}
@@ -110,7 +174,7 @@ func (receiver *ProjectRepositoriesResource) Create(ctx context.Context, request
 
 	diags = response.State.Set(ctx, &ProjectRepositoriesModel{
 		RetainOnDelete: plan.RetainOnDelete,
-		Key:            types.StringValue(plan.Key.ValueString()),
+		Project:        types.StringValue(plan.Project.ValueString()),
 		Repositories:   plan.Repositories,
 	})
 	if util.TestDiagnostic(&response.Diagnostics, diags) {
@@ -133,7 +197,7 @@ func (receiver *ProjectRepositoriesResource) Read(ctx context.Context, request r
 		return
 	}
 
-	repositories, err := receiver.client.ProjectService().GetSpecRepositories(state.Key.ValueString())
+	repositories, err := receiver.client.ProjectService().GetSpecRepositories(state.Project.ValueString())
 	if err != nil {
 		response.Diagnostics.AddError(errorFailedToReadRepository, err.Error())
 		return
@@ -162,7 +226,7 @@ func (receiver *ProjectRepositoriesResource) Read(ctx context.Context, request r
 
 	diags = response.State.Set(ctx, &ProjectRepositoriesModel{
 		RetainOnDelete: state.RetainOnDelete,
-		Key:            types.StringValue(state.Key.ValueString()),
+		Project:        types.StringValue(state.Project.ValueString()),
 		Repositories:   listValue,
 	})
 	if util.TestDiagnostic(&response.Diagnostics, diags) {
@@ -204,7 +268,7 @@ func (receiver *ProjectRepositoriesResource) Update(ctx context.Context, request
 			return
 		}
 
-		_, err = receiver.client.ProjectService().AddSpecRepositories(plan.Key.ValueString(), repositoryId)
+		_, err = receiver.client.ProjectService().AddSpecRepositories(plan.Project.ValueString(), repositoryId)
 		if util.TestError(&response.Diagnostics, err, errorFailedToAddProjectRepositories) {
 			return
 		}
@@ -216,7 +280,7 @@ func (receiver *ProjectRepositoriesResource) Update(ctx context.Context, request
 			return
 		}
 
-		err = receiver.client.ProjectService().RemoveSpecRepositories(plan.Key.ValueString(), repositoryId)
+		err = receiver.client.ProjectService().RemoveSpecRepositories(plan.Project.ValueString(), repositoryId)
 		if util.TestError(&response.Diagnostics, err, errorFailedToRemoveProjectRepositories) {
 			return
 		}
@@ -224,7 +288,7 @@ func (receiver *ProjectRepositoriesResource) Update(ctx context.Context, request
 
 	diags = response.State.Set(ctx, &ProjectRepositoriesModel{
 		RetainOnDelete: plan.RetainOnDelete,
-		Key:            types.StringValue(plan.Key.ValueString()),
+		Project:        types.StringValue(plan.Project.ValueString()),
 		Repositories:   plan.Repositories,
 	})
 	if util.TestDiagnostic(&response.Diagnostics, diags) {
@@ -256,7 +320,7 @@ func (receiver *ProjectRepositoriesResource) Delete(ctx context.Context, request
 				return
 			}
 
-			err = receiver.client.ProjectService().RemoveSpecRepositories(state.Key.ValueString(), repositoryId)
+			err = receiver.client.ProjectService().RemoveSpecRepositories(state.Project.ValueString(), repositoryId)
 			if util.TestError(&response.Diagnostics, err, errorFailedToRemoveProjectRepositories) {
 				return
 			}
@@ -267,5 +331,5 @@ func (receiver *ProjectRepositoriesResource) Delete(ctx context.Context, request
 }
 
 func (receiver *ProjectRepositoriesResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("key"), request, response)
+	resource.ImportStatePassthroughID(ctx, path.Root("project"), request, response)
 }

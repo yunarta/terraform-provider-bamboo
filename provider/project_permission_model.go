@@ -6,9 +6,18 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
-type ProjectPermissionsModel struct {
+type ProjectPermissionsModel0 struct {
 	RetainOnDelete    types.Bool   `tfsdk:"retain_on_delete"`
 	Key               types.String `tfsdk:"key"`
+	AssignmentVersion types.String `tfsdk:"assignment_version"`
+	Assignments       types.List   `tfsdk:"assignments"`
+	ComputedUsers     types.List   `tfsdk:"computed_users"`
+	ComputedGroups    types.List   `tfsdk:"computed_groups"`
+}
+
+type ProjectPermissionsModel struct {
+	RetainOnDelete    types.Bool   `tfsdk:"retain_on_delete"`
+	Project           types.String `tfsdk:"project"`
 	AssignmentVersion types.String `tfsdk:"assignment_version"`
 	Assignments       types.List   `tfsdk:"assignments"`
 	ComputedUsers     types.List   `tfsdk:"computed_users"`
@@ -25,13 +34,24 @@ func (d ProjectPermissionsModel) getAssignment(ctx context.Context) (Assignments
 }
 
 func (d ProjectPermissionsModel) getProjectKey(ctx context.Context) string {
-	return d.Key.ValueString()
+	return d.Project.ValueString()
+}
+
+func FromProjectPermissionsModel0(plan ProjectPermissionsModel0) *ProjectPermissionsModel {
+	return &ProjectPermissionsModel{
+		RetainOnDelete:    plan.RetainOnDelete,
+		Project:           plan.Key,
+		AssignmentVersion: plan.AssignmentVersion,
+		Assignments:       plan.Assignments,
+		ComputedUsers:     plan.ComputedUsers,
+		ComputedGroups:    plan.ComputedGroups,
+	}
 }
 
 func NewProjectPermissionsModel(plan ProjectPermissionsModel, assignmentResult *AssignmentResult) *ProjectPermissionsModel {
 	return &ProjectPermissionsModel{
 		RetainOnDelete:    plan.RetainOnDelete,
-		Key:               plan.Key,
+		Project:           plan.Project,
 		AssignmentVersion: plan.AssignmentVersion,
 		Assignments:       plan.Assignments,
 		ComputedUsers:     assignmentResult.ComputedUsers,

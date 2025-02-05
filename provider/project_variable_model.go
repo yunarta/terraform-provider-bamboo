@@ -4,21 +4,25 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
-type ProjectVariableModel struct {
+type ProjectVariableModel0 struct {
 	Key    types.String `tfsdk:"key"`
 	Name   types.String `tfsdk:"name"`
 	Value  types.String `tfsdk:"value"`
 	Secret types.String `tfsdk:"secret"`
 }
 
-//func NewProjectVariableModel(plan ProjectVariableModel, project *bamboo.Project, assignmentResult *AssignmentResult) *ProjectVariableModel {
-//	return &ProjectVariableModel{
-//		Key:               types.StringValue(project.Key),
-//		Name:              types.StringValue(project.Name),
-//		Value:       types.StringValue(project.Value),
-//		Secret: types.StringValue(project.Value),
-//		Assignments:       plan.Assignments,
-//		ComputedUsers:     assignmentResult.ComputedUsers,
-//		ComputedGroups:    assignmentResult.ComputedGroups,
-//	}
-//}
+type ProjectVariableModel struct {
+	Project types.String `tfsdk:"project"`
+	Name    types.String `tfsdk:"name"`
+	Value   types.String `tfsdk:"value"`
+	Secret  types.String `tfsdk:"secret"`
+}
+
+func FromProjectVariableModel0(plan ProjectVariableModel0) *ProjectVariableModel {
+	return &ProjectVariableModel{
+		Project: plan.Key,
+		Name:    plan.Name,
+		Value:   plan.Value,
+		Secret:  plan.Secret,
+	}
+}

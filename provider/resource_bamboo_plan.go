@@ -15,11 +15,12 @@ import (
 )
 
 var (
-	_ resource.Resource                = &PlanResource{}
-	_ resource.ResourceWithConfigure   = &PlanResource{}
-	_ resource.ResourceWithImportState = &PlanResource{}
-	_ ProjectPermissionsReceiver       = &PlanResource{}
-	_ ConfigurableReceiver             = &PlanResource{}
+	_ resource.Resource                 = &PlanResource{}
+	_ resource.ResourceWithConfigure    = &PlanResource{}
+	_ resource.ResourceWithImportState  = &PlanResource{}
+	_ resource.ResourceWithUpgradeState = &PlanResource{}
+	_ ProjectPermissionsReceiver        = &PlanResource{}
+	_ ConfigurableReceiver              = &PlanResource{}
 )
 
 func NewPlanResource() resource.Resource {
@@ -44,8 +45,8 @@ func (receiver *PlanResource) Metadata(ctx context.Context, request resource.Met
 	response.TypeName = request.ProviderTypeName + "_plan"
 }
 
-func (receiver *PlanResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
-	response.Schema = schema.Schema{
+func (receiver *PlanResource) schemaV0() schema.Schema {
+	return schema.Schema{
 		MarkdownDescription: `This resource define project plan.
 
 The priority block has a priority that defines the final assigned permissions of the user or group.`,
@@ -82,6 +83,69 @@ The priority block has a priority that defines the final assigned permissions of
 	}
 }
 
+func (receiver *PlanResource) schemaV1() schema.Schema {
+	return schema.Schema{
+		Version: 1,
+		MarkdownDescription: `This resource define project plan.
+
+The priority block has a priority that defines the final assigned permissions of the user or group.`,
+		Attributes: map[string]schema.Attribute{
+			"retain_on_delete": schema.BoolAttribute{
+				Optional:            true,
+				Computed:            true,
+				Default:             booldefault.StaticBool(true),
+				MarkdownDescription: "Default value is `true`, and if the value set to `false` when the resource destroyed, the project will be removed.",
+			},
+			"id": schema.Int64Attribute{
+				Computed:            true,
+				MarkdownDescription: "Plan id.",
+			},
+			"project": schema.StringAttribute{
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					util.ReplaceIfStringDiff(),
+				},
+				MarkdownDescription: "Project key.",
+			},
+			"plan_key": schema.StringAttribute{
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					util.ReplaceIfStringDiff(),
+				},
+				MarkdownDescription: "Plan key.",
+			},
+			"name": schema.StringAttribute{
+				Required:            true,
+				MarkdownDescription: "Project name.",
+			},
+		},
+	}
+}
+
+func (receiver *PlanResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
+	response.Schema = receiver.schemaV1()
+}
+
+func (receiver *PlanResource) UpgradeState(ctx context.Context) map[int64]resource.StateUpgrader {
+	v0 := receiver.schemaV0()
+	return map[int64]resource.StateUpgrader{
+		0: {
+			PriorSchema:   &v0,
+			StateUpgrader: receiver.upgradeExampleResourceStateV0toV1,
+		},
+	}
+}
+
+func (receiver *PlanResource) upgradeExampleResourceStateV0toV1(ctx context.Context, req resource.UpgradeStateRequest, resp *resource.UpgradeStateResponse) {
+	var old PlanModel0
+	req.State.Get(ctx, &old)
+
+	diags := resp.State.Set(ctx, FromPlanModel0(old))
+	if util.TestDiagnostic(&resp.Diagnostics, diags) {
+		return
+	}
+}
+
 func (receiver *PlanResource) Configure(ctx context.Context, request resource.ConfigureRequest, response *resource.ConfigureResponse) {
 	ConfigureResource(receiver, ctx, request, response)
 }
@@ -101,7 +165,7 @@ func (receiver *PlanResource) Create(ctx context.Context, request resource.Creat
 	bambooPlan, err := receiver.client.PlanService().Create(bamboo.CreatePlan{
 		PlanKey:    plan.PlanKey.ValueString(),
 		Name:       plan.Name.ValueString(),
-		ProjectKey: plan.Key.ValueString(),
+		ProjectKey: plan.Project.ValueString(),
 	})
 	if util.TestError(&response.Diagnostics, err, "Failed to create project") {
 		return
@@ -132,7 +196,7 @@ func (receiver *PlanResource) Read(ctx context.Context, request resource.ReadReq
 		return
 	}
 
-	bambooPlan, err := receiver.client.PlanService().Read(fmt.Sprintf("%s-%s", state.Key.ValueString(), state.PlanKey.ValueString()))
+	bambooPlan, err := receiver.client.PlanService().Read(fmt.Sprintf("%s-%s", state.Project.ValueString(), state.PlanKey.ValueString()))
 	if util.TestError(&response.Diagnostics, err, "Failed to create plan") {
 		return
 	}
@@ -167,7 +231,7 @@ func (receiver *PlanResource) Update(ctx context.Context, request resource.Updat
 		return
 	}
 
-	bambooPlan, err := receiver.client.PlanService().Read(fmt.Sprintf("%s-%s", state.Key.ValueString(), state.PlanKey.ValueString()))
+	bambooPlan, err := receiver.client.PlanService().Read(fmt.Sprintf("%s-%s", state.Project.ValueString(), state.PlanKey.ValueString()))
 	if util.TestError(&response.Diagnostics, err, "Failed to read plan") {
 		return
 	}
@@ -198,7 +262,7 @@ func (receiver *PlanResource) Delete(ctx context.Context, request resource.Delet
 	}
 
 	if !state.RetainOnDelete.ValueBool() {
-		err := receiver.client.PlanService().Delete(fmt.Sprintf("%s-%s", state.Key.ValueString(), state.PlanKey.ValueString()))
+		err := receiver.client.PlanService().Delete(fmt.Sprintf("%s-%s", state.Project.ValueString(), state.PlanKey.ValueString()))
 		if util.TestError(&response.Diagnostics, err, "Failed to delete plan") {
 			return
 		}
@@ -210,7 +274,7 @@ func (receiver *PlanResource) Delete(ctx context.Context, request resource.Delet
 func (receiver *PlanResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
 	slug := strings.Split(request.ID, "-")
 	diags := response.State.Set(ctx, &PlanModel{
-		Key:     types.StringValue(slug[0]),
+		Project: types.StringValue(slug[0]),
 		PlanKey: types.StringValue(slug[1]),
 		Name:    types.StringNull(),
 	})
