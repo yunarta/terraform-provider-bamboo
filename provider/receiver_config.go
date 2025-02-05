@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
+	"github.com/hashicorp/terraform-plugin-framework/ephemeral"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/yunarta/terraform-atlassian-api-client/bamboo"
 )
@@ -30,6 +31,23 @@ func ConfigureDataSource(receiver ConfigurableReceiver, ctx context.Context, req
 }
 
 func ConfigureResource(receiver ConfigurableReceiver, ctx context.Context, request resource.ConfigureRequest, response *resource.ConfigureResponse) {
+	if request.ProviderData == nil {
+		return
+	}
+
+	data, ok := request.ProviderData.(*BambooProviderData)
+	if !ok {
+		response.Diagnostics.AddError(
+			"Unexpected Data Source Configure Type",
+			fmt.Sprintf("Expected *AtlassianCloudProviderModel, got: %T. Please report this issue to the provider developers.", request.ProviderData),
+		)
+		return
+	}
+
+	receiver.setConfig(data.config, data.client)
+}
+
+func ConfigureEphemeral(receiver ConfigurableReceiver, ctx context.Context, request ephemeral.ConfigureRequest, response *ephemeral.ConfigureResponse) {
 	if request.ProviderData == nil {
 		return
 	}
