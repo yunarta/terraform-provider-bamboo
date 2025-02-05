@@ -6,7 +6,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/yunarta/terraform-atlassian-api-client/bamboo"
@@ -53,7 +52,6 @@ The priority block has a priority that defines the final assigned permissions of
 			"retain_on_delete": schema.BoolAttribute{
 				Optional:            true,
 				Computed:            true,
-				Default:             booldefault.StaticBool(false),
 				MarkdownDescription: "Default value is `true`, and if the value set to `false` when the resource destroyed, the project will be removed.",
 			},
 			"key": schema.StringAttribute{
@@ -105,7 +103,6 @@ The priority block has a priority that defines the final assigned permissions of
 			"retain_on_delete": schema.BoolAttribute{
 				Optional:            true,
 				Computed:            true,
-				Default:             booldefault.StaticBool(false),
 				MarkdownDescription: "Default value is `true`, and if the value set to `false` when the resource destroyed, the project will be removed.",
 			},
 			"project": schema.StringAttribute{
