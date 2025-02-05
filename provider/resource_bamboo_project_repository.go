@@ -92,7 +92,7 @@ In order for the execution to be successful, the user must have user access to a
 				Computed:            true,
 				MarkdownDescription: "Default value is `true`, and if the value set to `false` when the resource destroyed, the permission will be removed.",
 			},
-			"key": schema.StringAttribute{
+			"project": schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
 					util.ReplaceIfStringDiff(),
@@ -127,7 +127,7 @@ func (receiver *ProjectRepositoriesResource) upgradeExampleResourceStateV0toV1(c
 	req.State.Get(ctx, &old)
 
 	diags := resp.State.Set(ctx, &ProjectRepositoriesModel{
-		RetainOnDelete: old.RetainOnDelete,
+		RetainOnDelete: types.BoolValue(old.RetainOnDelete.ValueBool()),
 		Project:        old.Key,
 		Repositories:   old.Repositories,
 	})
@@ -170,7 +170,7 @@ func (receiver *ProjectRepositoriesResource) Create(ctx context.Context, request
 	}
 
 	diags = response.State.Set(ctx, &ProjectRepositoriesModel{
-		RetainOnDelete: plan.RetainOnDelete,
+		RetainOnDelete: types.BoolValue(plan.RetainOnDelete.ValueBool()),
 		Project:        types.StringValue(plan.Project.ValueString()),
 		Repositories:   plan.Repositories,
 	})
@@ -222,7 +222,7 @@ func (receiver *ProjectRepositoriesResource) Read(ctx context.Context, request r
 	}
 
 	diags = response.State.Set(ctx, &ProjectRepositoriesModel{
-		RetainOnDelete: state.RetainOnDelete,
+		RetainOnDelete: types.BoolValue(state.RetainOnDelete.ValueBool()),
 		Project:        types.StringValue(state.Project.ValueString()),
 		Repositories:   listValue,
 	})
@@ -284,7 +284,7 @@ func (receiver *ProjectRepositoriesResource) Update(ctx context.Context, request
 	}
 
 	diags = response.State.Set(ctx, &ProjectRepositoriesModel{
-		RetainOnDelete: plan.RetainOnDelete,
+		RetainOnDelete: types.BoolValue(plan.RetainOnDelete.ValueBool()),
 		Project:        types.StringValue(plan.Project.ValueString()),
 		Repositories:   plan.Repositories,
 	})

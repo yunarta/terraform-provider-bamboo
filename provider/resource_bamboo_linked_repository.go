@@ -63,7 +63,7 @@ The priority block has a priority that defines the final assigned permissions of
 			"name": schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplaceIf(linkedRepositoryNameCheck, "", ""),
+					util.ReplaceIfStringDiff(),
 				},
 				MarkdownDescription: "Name of the linked repository.",
 			},
@@ -207,6 +207,7 @@ func (receiver *LinkedRepositoryResource) Read(ctx context.Context, request reso
 		return
 	}
 
+	state.ID = types.StringValue(fmt.Sprintf("%v", repository.ID))
 	computation, diags := ComputeProjectLinkedRepositoryAssignments(ctx, receiver, state)
 	if util.TestDiagnostic(&response.Diagnostics, diags) {
 		return

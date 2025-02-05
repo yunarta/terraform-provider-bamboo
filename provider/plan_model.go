@@ -36,7 +36,7 @@ type PlanModel struct {
 
 func FromPlanModel0(plan PlanModel0) *PlanModel {
 	return &PlanModel{
-		RetainOnDelete: plan.RetainOnDelete,
+		RetainOnDelete: types.BoolValue(plan.RetainOnDelete.ValueBool()),
 		Id:             plan.Id,
 		Project:        plan.Key,
 		PlanKey:        plan.PlanKey,
@@ -47,7 +47,7 @@ func FromPlanModel0(plan PlanModel0) *PlanModel {
 func NewPlanModel(plan PlanModel, bambooPlan *bamboo.Plan) *PlanModel {
 	//id, _ := strconv.Atoi(bambooPlan.Id)
 	return &PlanModel{
-		RetainOnDelete: plan.RetainOnDelete,
+		RetainOnDelete: types.BoolValue(plan.RetainOnDelete.ValueBool()),
 		Id:             types.Int64Value(bambooPlan.Id),
 		Project:        types.StringValue(bambooPlan.ProjectKey),
 		PlanKey:        types.StringValue(bambooPlan.ShortKey),

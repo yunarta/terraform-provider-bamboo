@@ -44,7 +44,7 @@ func (d ProjectModel) getProjectKey(ctx context.Context) string {
 
 func FromProjectModel0(plan ProjectModel0) *ProjectModel {
 	return &ProjectModel{
-		RetainOnDelete:    plan.RetainOnDelete,
+		RetainOnDelete:    types.BoolValue(plan.RetainOnDelete.ValueBool()),
 		Project:           plan.Key,
 		Name:              plan.Name,
 		Description:       plan.Description,
@@ -57,7 +57,7 @@ func FromProjectModel0(plan ProjectModel0) *ProjectModel {
 
 func NewProjectModel(plan ProjectModel, project *bamboo.Project, assignmentResult *AssignmentResult) *ProjectModel {
 	return &ProjectModel{
-		RetainOnDelete:    plan.RetainOnDelete,
+		RetainOnDelete:    types.BoolValue(plan.RetainOnDelete.ValueBool()),
 		Project:           types.StringValue(project.Key),
 		Name:              types.StringValue(project.Name),
 		Description:       types.StringValue(project.Description),

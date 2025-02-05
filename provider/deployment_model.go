@@ -41,7 +41,7 @@ func (d DeploymentModel) getDeploymentId(ctx context.Context) int {
 
 func NewDeploymentModel(plan DeploymentModel, deployment *bamboo.Deployment, assignmentResult *AssignmentResult) *DeploymentModel {
 	return &DeploymentModel{
-		RetainOnDelete:         plan.RetainOnDelete,
+		RetainOnDelete:         types.BoolValue(plan.RetainOnDelete.ValueBool()),
 		ID:                     types.StringValue(fmt.Sprintf("%v", deployment.ID)),
 		Name:                   types.StringValue(deployment.Name),
 		PlanKey:                types.StringValue(deployment.PlanKey.Key),

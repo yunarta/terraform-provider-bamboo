@@ -110,7 +110,7 @@ func (receiver *DeploymentRepositoriesResource) Create(ctx context.Context, requ
 	}
 
 	diags = response.State.Set(ctx, &DeploymentRepositoriesModel{
-		RetainOnDelete: plan.RetainOnDelete,
+		RetainOnDelete: types.BoolValue(plan.RetainOnDelete.ValueBool()),
 		ID:             types.StringValue(strconv.Itoa(deploymentId)),
 		Repositories:   plan.Repositories,
 	})
@@ -154,7 +154,7 @@ func (receiver *DeploymentRepositoriesResource) Read(ctx context.Context, reques
 	}
 
 	diags = response.State.Set(ctx, &DeploymentRepositoriesModel{
-		RetainOnDelete: state.RetainOnDelete,
+		RetainOnDelete: types.BoolValue(state.RetainOnDelete.ValueBool()),
 		ID:             types.StringValue(fmt.Sprintf("%v", deploymentId)),
 		Repositories:   listValue,
 	})
@@ -212,7 +212,7 @@ func (receiver *DeploymentRepositoriesResource) Update(ctx context.Context, requ
 	}
 
 	diags = response.State.Set(ctx, &DeploymentRepositoriesModel{
-		RetainOnDelete: plan.RetainOnDelete,
+		RetainOnDelete: types.BoolValue(plan.RetainOnDelete.ValueBool()),
 		ID:             types.StringValue(strconv.Itoa(deploymentId)),
 		Repositories:   plan.Repositories,
 	})

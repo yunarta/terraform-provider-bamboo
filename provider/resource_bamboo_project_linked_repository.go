@@ -64,7 +64,7 @@ The priority block has a priority that defines the final assigned permissions of
 			"name": schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplaceIf(projectLinkedRepositoryNameCheck, "", ""),
+					util.ReplaceIfStringDiff(),
 				},
 				MarkdownDescription: "Name of the linked repository.",
 			},
@@ -75,7 +75,7 @@ The priority block has a priority that defines the final assigned permissions of
 			"key": schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplaceIf(projectLinkedRepositoryOwnerCheck, "", ""),
+					util.ReplaceIfStringDiff(),
 				},
 				MarkdownDescription: "Bamboo project key that owns this linked repository.",
 			},
@@ -313,6 +313,7 @@ func (receiver *ProjectLinkedRepositoryResource) Read(ctx context.Context, reque
 		return
 	}
 
+	state.ID = types.StringValue(fmt.Sprintf("%v", repository.ID))
 	computation, diags := ComputeProjectLinkedRepositoryAssignments(ctx, receiver, state)
 	if util.TestDiagnostic(&response.Diagnostics, diags) {
 		return

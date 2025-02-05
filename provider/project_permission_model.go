@@ -39,7 +39,7 @@ func (d ProjectPermissionsModel) getProjectKey(ctx context.Context) string {
 
 func FromProjectPermissionsModel0(plan ProjectPermissionsModel0) *ProjectPermissionsModel {
 	return &ProjectPermissionsModel{
-		RetainOnDelete:    plan.RetainOnDelete,
+		RetainOnDelete:    types.BoolValue(plan.RetainOnDelete.ValueBool()),
 		Project:           plan.Key,
 		AssignmentVersion: plan.AssignmentVersion,
 		Assignments:       plan.Assignments,
@@ -50,7 +50,7 @@ func FromProjectPermissionsModel0(plan ProjectPermissionsModel0) *ProjectPermiss
 
 func NewProjectPermissionsModel(plan ProjectPermissionsModel, assignmentResult *AssignmentResult) *ProjectPermissionsModel {
 	return &ProjectPermissionsModel{
-		RetainOnDelete:    plan.RetainOnDelete,
+		RetainOnDelete:    types.BoolValue(plan.RetainOnDelete.ValueBool()),
 		Project:           plan.Project,
 		AssignmentVersion: plan.AssignmentVersion,
 		Assignments:       plan.Assignments,

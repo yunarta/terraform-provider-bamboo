@@ -141,7 +141,7 @@ func (receiver *LinkedRepositoryAccessorResource) Create(ctx context.Context, re
 	}
 
 	diags = response.State.Set(ctx, &LinkedRepositoryAccessorModel{
-		RetainOnDelete: plan.RetainOnDelete,
+		RetainOnDelete: types.BoolValue(plan.RetainOnDelete.ValueBool()),
 		ID:             types.StringValue(strconv.Itoa(repositoryId)),
 		Repositories:   plan.Repositories,
 	})
@@ -193,7 +193,7 @@ func (receiver *LinkedRepositoryAccessorResource) Read(ctx context.Context, requ
 	}
 
 	diags = response.State.Set(ctx, &LinkedRepositoryAccessorModel{
-		RetainOnDelete: state.RetainOnDelete,
+		RetainOnDelete: types.BoolValue(state.RetainOnDelete.ValueBool()),
 		ID:             types.StringValue(fmt.Sprintf("%v", repositoryId)),
 		Repositories:   from,
 	})
@@ -268,7 +268,7 @@ func (receiver *LinkedRepositoryAccessorResource) Update(ctx context.Context, re
 	}
 
 	diags = response.State.Set(ctx, &LinkedRepositoryAccessorModel{
-		RetainOnDelete: plan.RetainOnDelete,
+		RetainOnDelete: types.BoolValue(plan.RetainOnDelete.ValueBool()),
 		ID:             types.StringValue(strconv.Itoa(repositoryId)),
 		Repositories:   plan.Repositories,
 	})
