@@ -58,8 +58,8 @@ func ComputeProjectLinkedRepositoryAssignments(ctx context.Context, receiver Pro
 		return nil, diags
 	}
 
-	deploymentId := state.getLinkedRepositoryId(ctx)
-	assignedPermissions, err := receiver.getClient().RepositoryService().ReadPermissions(deploymentId)
+	repositoryId := state.getLinkedRepositoryId(ctx)
+	assignedPermissions, err := receiver.getClient().RepositoryService().ReadPermissions(repositoryId)
 	if err != nil {
 		return nil, []diag.Diagnostic{diag.NewErrorDiagnostic("Failed to read deployment permissions", err.Error())}
 	}
