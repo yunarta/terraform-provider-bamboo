@@ -207,6 +207,8 @@ func (receiver *LinkedRepositoryResource) Read(ctx context.Context, request reso
 		return
 	}
 
+	state.ID = types.StringValue(fmt.Sprintf("%d", repository.ID))
+
 	computation, diags := ComputeProjectLinkedRepositoryAssignments(ctx, receiver, state)
 	if util.TestDiagnostic(&response.Diagnostics, diags) {
 		return
