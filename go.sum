@@ -181,8 +181,8 @@ github.com/yunarta/golang-quality-of-life-pack v1.0.0 h1:T0xwfFnD61x6Nz9ej+tRWK6
 github.com/yunarta/golang-quality-of-life-pack v1.0.0/go.mod h1:Qw+9tWyqPJxxHLyuxCo5xCNwmfG/TMOt8Vkfq0bl9TU=
 github.com/yunarta/terraform-api-transport v1.0.2 h1:uJ3+gAblwPWc4dVGD8ku7X4wLfUzi+pCC+dLS54JdiU=
 github.com/yunarta/terraform-api-transport v1.0.2/go.mod h1:uQshZ/gKlszLfamYY+y+4pAnxnOtzg6XC2zn63h8ZT4=
-github.com/yunarta/terraform-atlassian-api-client v1.3.22 h1:cfyBuAPUxwv+O8G8FL0OOJUzM+VcMJ5PnMMLBNr2j0A=
-github.com/yunarta/terraform-atlassian-api-client v1.3.22/go.mod h1:uu8we0EQNUX9WdZReegMzN/jEANZUW7m42WZhYj7rOc=
+github.com/yunarta/terraform-atlassian-api-client v1.3.23 h1:2u14n+P13YhHriS7QreknrtB9L1Ll9Y3QwhTK1AE2K4=
+github.com/yunarta/terraform-atlassian-api-client v1.3.23/go.mod h1:uu8we0EQNUX9WdZReegMzN/jEANZUW7m42WZhYj7rOc=
 github.com/yunarta/terraform-provider-commons v1.0.3 h1:+eHAfpObrOr3WKvGhZzZAYsPphiMmZOiF1pHhF82lOQ=
 github.com/yunarta/terraform-provider-commons v1.0.3/go.mod h1:8jL2esDNbF7MBfmE2gbrs45NSYnDk8XfRtpkpjxgXNU=
 github.com/zclconf/go-cty v1.15.0 h1:tTCRWxsexYUmtt/wVxgDClUe+uQusuI443uL6e+5sXQ=
